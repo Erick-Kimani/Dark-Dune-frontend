@@ -1,0 +1,702 @@
+/* ═══════════════════════════════════════════
+   PaymentPage.css — Dark Volcanic Beehive Theme
+   Place in: src/assets/PaymentPage.css
+═══════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* ════════════════════════════
+   CSS VARIABLES
+════════════════════════════ */
+:root {
+  --dark-bg:        #0a0a0a;
+  --dark-surface:   #111111;
+  --dark-card:      #161616;
+  --dark-raised:    #1e1e1e;
+  --dark-border:    #282828;
+  --volcanic-red:   #c0392b;
+  --volcanic-glow:  #e74c3c;
+  --volcanic-dim:   #6b1a10;
+  --gold:           #f5c842;
+  --gold-dim:       #a07c10;
+  --silver-tone:    #8fa8bf;
+  --silver-dim:     #3e5a70;
+  --text-primary:   #ede8df;
+  --text-secondary: #7a7570;
+  --text-muted:     #3e3c3a;
+  --green-check:    #3dba6f;
+}
+
+/* ════════════════════════════
+   PAGE WRAPPER + HEX BACKGROUND
+════════════════════════════ */
+.pay-page-wrapper {
+  min-height: 100vh;
+  background-color: var(--dark-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Full-screen hex grid — volcanic red outlines */
+.pay-page-wrapper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104'%3E%3Cpolygon points='30,3 57,18 57,48 30,63 3,48 3,18' fill='%230d0d0d' stroke='%23c0392b' stroke-width='1' opacity='0.22'/%3E%3Cpolygon points='30,55 57,70 57,100 30,115 3,100 3,70' fill='%230d0d0d' stroke='%23c0392b' stroke-width='1' opacity='0.22'/%3E%3Cpolygon points='-1,29 27,44 27,74 -1,89' fill='%230d0d0d' stroke='%23c0392b' stroke-width='1' opacity='0.22'/%3E%3Cpolygon points='61,29 89,44 89,74 61,89' fill='%230d0d0d' stroke='%23c0392b' stroke-width='1' opacity='0.22'/%3E%3C/svg%3E");
+  background-size: 60px 104px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Deep radial vignette — dims edges, glows center with red ember */
+.pay-page-wrapper::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 50%,
+      rgba(192, 57, 43, 0.09) 0%,
+      rgba(10, 10, 10, 0.6)  55%,
+      rgba(10, 10, 10, 0.97) 100%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ════════════════════════════
+   ROOT CARD
+════════════════════════════ */
+.pay-root {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark-surface);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  border: 1px solid #1f1f1f;
+  box-shadow:
+    0 0 0 1px rgba(192, 57, 43, 0.1),
+    0 12px 60px rgba(0, 0, 0, 0.8),
+    0 0 100px rgba(192, 57, 43, 0.05);
+  overflow: hidden;
+}
+
+/* Tiny hex watermark inside the card itself */
+.pay-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='76'%3E%3Cpolygon points='22,2 42,13 42,35 22,46 2,35 2,13' fill='none' stroke='%23c0392b' stroke-width='0.5' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 44px 76px;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 24px;
+}
+
+/* Volcanic top-edge glow line */
+.pay-root::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 8%; right: 8%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(192, 57, 43, 0.5) 35%,
+    rgba(231, 76, 60, 0.9) 50%,
+    rgba(192, 57, 43, 0.5) 65%,
+    transparent 100%
+  );
+  z-index: 2;
+}
+
+/* ════════════════════════════
+   HEADER
+════════════════════════════ */
+.pay-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.pay-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--dark-raised);
+  color: var(--text-primary);
+  border: 1px solid rgba(192, 57, 43, 0.5);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 16px rgba(192, 57, 43, 0.2), inset 0 0 8px rgba(192, 57, 43, 0.05);
+}
+
+.logo-bolt { color: var(--volcanic-glow); }
+
+.pay-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  letter-spacing: 0.01em;
+}
+
+.pay-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ════════════════════════════
+   PLAN CARDS GRID
+════════════════════════════ */
+.plans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.plan-card {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+  border-radius: 20px;
+  padding: 1.5rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.18s, box-shadow 0.25s;
+}
+
+/* Hex pattern etched into each plan card */
+.plan-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='66'%3E%3Cpolygon points='19,2 36,11 36,30 19,39 2,30 2,11' fill='none' stroke='%23c0392b' stroke-width='0.7' opacity='0.15'/%3E%3C/svg%3E");
+  background-size: 38px 66px;
+  pointer-events: none;
+  border-radius: 20px;
+  z-index: 0;
+}
+
+.plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(192, 57, 43, 0.12);
+}
+
+/* Selected states */
+.plan-card.selected-premium {
+  border-color: rgba(245, 200, 66, 0.4);
+  background: #161200;
+  box-shadow:
+    0 0 0 1px rgba(245, 200, 66, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(192, 57, 43, 0.04);
+}
+
+.plan-card.selected-silver {
+  border-color: rgba(143, 168, 191, 0.35);
+  background: #0c1520;
+  box-shadow:
+    0 0 0 1px rgba(143, 168, 191, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(192, 57, 43, 0.04);
+}
+
+/* Volcanic top accent on selected cards */
+.plan-card.selected-premium::after,
+.plan-card.selected-silver::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  z-index: 2;
+}
+
+.plan-card.selected-premium::after {
+  background: linear-gradient(90deg,
+    transparent,
+    var(--volcanic-dim) 20%,
+    var(--gold) 50%,
+    var(--volcanic-dim) 80%,
+    transparent
+  );
+}
+
+.plan-card.selected-silver::after {
+  background: linear-gradient(90deg,
+    transparent,
+    var(--volcanic-dim) 20%,
+    var(--silver-tone) 50%,
+    var(--volcanic-dim) 80%,
+    transparent
+  );
+}
+
+/* ── Radio button ── */
+.select-radio {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--dark-border);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  z-index: 1;
+}
+
+.radio-premium {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(245, 200, 66, 0.4);
+}
+
+.radio-silver {
+  background: var(--silver-dim);
+  border-color: var(--silver-tone);
+  box-shadow: 0 0 8px rgba(143, 168, 191, 0.3);
+}
+
+.select-radio-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--dark-bg);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.select-radio-dot.visible { opacity: 1; }
+
+/* ── Plan badge ── */
+.plan-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 50px;
+  margin-bottom: 1rem;
+  position: relative; z-index: 1;
+}
+
+.badge-premium {
+  background: rgba(245, 200, 66, 0.08);
+  color: var(--gold);
+  border: 1px solid rgba(245, 200, 66, 0.2);
+}
+
+.badge-silver {
+  background: rgba(143, 168, 191, 0.08);
+  color: var(--silver-tone);
+  border: 1px solid rgba(143, 168, 191, 0.2);
+}
+
+/* ── Plan icon — hexagonal clip ── */
+.plan-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  position: relative;
+  z-index: 1;
+  clip-path: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+  width: 90px;
+  height: 90px;
+}
+
+.icon-premium {
+  background: linear-gradient(135deg, #2a1e00, #6a4a00);
+  box-shadow: 0 0 24px rgba(245, 200, 66, 0.25), 0 0 0 2px rgba(192, 57, 43, 0.3);
+}
+
+.icon-silver {
+  background: linear-gradient(135deg, #0a1822, #1a3448);
+  box-shadow: 0 0 24px rgba(143, 168, 191, 0.2), 0 0 0 2px rgba(192, 57, 43, 0.3);
+}
+
+.plan-img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+}
+
+.icon-fallback { font-size: 36px; }
+
+/* ── Plan text ── */
+.plan-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  position: relative; z-index: 1;
+}
+
+.plan-tagline {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  position: relative; z-index: 1;
+}
+
+.plan-price {
+  font-size: 28px; font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  position: relative; z-index: 1;
+}
+
+.plan-price span {
+  font-size: 13px; font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* ── Feature list ── */
+.plan-features {
+  list-style: none;
+  margin: 1rem 0 0 0;
+  padding: 0;
+  position: relative; z-index: 1;
+}
+
+.plan-features li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 5px 0;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 0.5px solid var(--dark-border);
+}
+
+.plan-features li:last-child { border-bottom: none; }
+
+.check { color: var(--green-check); font-weight: 700; }
+
+/* ════════════════════════════
+   PAYMENT FORM
+════════════════════════════ */
+.pay-form {
+  background: var(--dark-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--dark-border);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Hex watermark inside form */
+.pay-form::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='66'%3E%3Cpolygon points='19,2 36,11 36,30 19,39 2,30 2,11' fill='none' stroke='%23c0392b' stroke-width='0.5' opacity='0.07'/%3E%3C/svg%3E");
+  background-size: 38px 66px;
+  pointer-events: none;
+  border-radius: 16px;
+  z-index: 0;
+}
+
+/* Volcanic left-side accent bar */
+.pay-form::after {
+  content: '';
+  position: absolute;
+  top: 15%; bottom: 15%;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--volcanic-red) 40%,
+    var(--volcanic-glow) 50%,
+    var(--volcanic-red) 60%,
+    transparent
+  );
+  border-radius: 0 2px 2px 0;
+}
+
+.form-title {
+  font-size: 12px; font-weight: 500;
+  color: var(--volcanic-glow);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin: 0 0 1rem 0;
+  position: relative; z-index: 1;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 10px;
+  position: relative; z-index: 1;
+}
+
+.form-row.full { grid-template-columns: 1fr; }
+
+.form-group label {
+  font-size: 11px; font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  display: block; margin-bottom: 5px;
+}
+
+.form-group input {
+  width: 100%; box-sizing: border-box;
+  background: var(--dark-raised);
+  border: 1px solid var(--dark-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--volcanic-red);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.18);
+}
+
+.form-group input::placeholder { color: var(--text-muted); }
+
+/* ── Card chips ── */
+.card-chips { display: flex; gap: 6px; margin-top: 7px; }
+
+.card-chip {
+  font-size: 11px; font-weight: 500;
+  padding: 2px 8px; border-radius: 4px;
+  border: 1px solid var(--dark-border);
+  color: var(--text-secondary);
+  background: var(--dark-raised);
+}
+
+/* ════════════════════════════
+   ORDER SUMMARY
+════════════════════════════ */
+.order-summary {
+  margin-top: 1.25rem;
+  position: relative; z-index: 1;
+}
+
+.summary-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.summary-row.total {
+  font-size: 15px; font-weight: 500;
+  color: var(--text-primary);
+  border-top: 0.5px solid var(--dark-border);
+  padding-top: 10px; margin-top: 6px;
+}
+
+/* ════════════════════════════
+   PAY BUTTON
+════════════════════════════ */
+.pay-btn {
+  width: 100%; padding: 14px;
+  border: none; border-radius: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.15s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+  z-index: 1;
+}
+
+/* Hex overlay on button */
+.pay-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48'%3E%3Cpolygon points='14,1 27,8 27,22 14,29 1,22 1,8' fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='0.6'/%3E%3C/svg%3E");
+  background-size: 28px 48px;
+  pointer-events: none;
+}
+
+.pay-btn:hover  { transform: scale(1.015); }
+.pay-btn:active { transform: scale(0.98); }
+
+.pay-btn-premium {
+  background: linear-gradient(135deg, #b07a08, #f5c842, #b07a08);
+  color: #150d00;
+  box-shadow:
+    0 4px 24px rgba(245, 200, 66, 0.2),
+    0 0 0 1px rgba(192, 57, 43, 0.35);
+}
+
+.pay-btn-silver {
+  background: linear-gradient(135deg, #2e4d63, #8fa8bf, #2e4d63);
+  color: #04090f;
+  box-shadow:
+    0 4px 24px rgba(143, 168, 191, 0.15),
+    0 0 0 1px rgba(192, 57, 43, 0.35);
+}
+
+/* ── Validation error ── */
+.form-error {
+  color: var(--volcanic-glow);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 10px;
+  position: relative; z-index: 1;
+}
+
+/* ── Security note ── */
+.secure-note {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  position: relative; z-index: 1;
+}
+
+/* ════════════════════════════
+   SUCCESS VIEW
+════════════════════════════ */
+.success-view {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 3rem 2rem;
+  position: relative; z-index: 1;
+}
+
+.success-icon {
+  width: 72px; height: 72px;
+  clip-path: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+  background: linear-gradient(135deg, #0a2010, #164a20);
+  border: 2px solid rgba(61, 186, 111, 0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: var(--green-check);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 28px rgba(61, 186, 111, 0.25);
+}
+
+.success-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.success-msg {
+  font-size: 14px; color: var(--text-secondary);
+  max-width: 260px; line-height: 1.6; margin: 0;
+}
+
+.back-btn {
+  margin-top: 1.5rem; padding: 10px 24px;
+  border: 1px solid var(--dark-border);
+  border-radius: 12px;
+  background: var(--dark-raised);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.back-btn:hover {
+  border-color: var(--volcanic-red);
+  box-shadow: 0 0 12px rgba(192, 57, 43, 0.2);
+}
+
+/* ════════════════════════════
+   RESPONSIVE
+════════════════════════════ */
+@media (max-width: 520px) {
+  .plans-grid { grid-template-columns: 1fr; }
+  .form-row   { grid-template-columns: 1fr; }
+  .pay-root   { padding: 1.5rem 1rem; }
+  .pay-title  { font-size: 22px; }
+}
+
+/* ════════════════════════════
+   REGULAR PLAN — additions
+════════════════════════════ */
+
+/* 3-column grid for three cards */
+.plans-grid {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Regular card selected state */
+.plan-card.selected-regular {
+  border-color: rgba(110, 190, 140, 0.4);
+  background: #0b1610;
+  box-shadow:
+    0 0 0 1px rgba(110, 190, 140, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 0 30px rgba(192, 57, 43, 0.04);
+}
+
+/* Volcanic top accent — Regular (green to red) */
+.plan-card.selected-regular::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  z-index: 2;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--volcanic-dim) 20%,
+    #6ebe8c 50%,
+    var(--volcanic-dim) 80%,
+    transparent
+  );
+}
+
+/* Radio — Regular */
+.radio-regular {
+  background: #2a5a38;
+  border-color: #6ebe8c;
+  box-shadow: 0 0 8px rgba(110, 190, 140, 0.35);
+}
+
+/* Badge — Regular */
+.badge-regular {
+  background: rgba(110, 190, 140, 0.08);
+  color: #6ebe8c;
+  border: 1px solid rgba(110, 190, 140, 0.2);
+}
+
+/* Icon wrap — Regular */
+.icon-regular {
+  background: linear-gradient(135deg, #0a2010, #1a4a26);
+  box-shadow: 0 0 24px rgba(110, 190, 140, 0.2), 0 0 0 2px rgba(192, 57, 43, 0.25);
+}
+
+/* Pay button — Regular */
+.pay-btn-regular {
+  background: linear-gradient(135deg, #1e4a2a, #6ebe8c, #1e4a2a);
+  color: #030f07;
+  box-shadow:
+    0 4px 24px rgba(110, 190, 140, 0.18),
+    0 0 0 1px rgba(192, 57, 43, 0.3);
+}
+
+/* Collapse to 2-col on medium screens, 1-col on mobile */
+@media (max-width: 720px) {
+  .plans-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 520px) {
+  .plans-grid { grid-template-columns: 1fr; }
+}
