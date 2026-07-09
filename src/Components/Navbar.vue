@@ -44,11 +44,17 @@
           </svg>
         </button>
 
-        <!-- Line ~48 - Desktop GET STARTED button -->
-      <a href="/login" class="navbar__cta">
-        <span>GET STARTED</span>
-        <span class="navbar__cta-arrow" aria-hidden="true">→</span>
-      </a>
+        <!-- Logged out: GET STARTED -->
+        <a v-if="!isLoggedIn" href="/login" class="navbar__cta">
+          <span>GET STARTED</span>
+          <span class="navbar__cta-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <!-- Logged in: LOG OUT -->
+        <button v-else class="navbar__cta navbar__cta--logout" :disabled="loggingOut" @click="handleLogout">
+          <span>{{ loggingOut ? 'LOGGING OUT...' : 'LOG OUT' }}</span>
+          <span class="navbar__cta-arrow" aria-hidden="true">→</span>
+        </button>
       </div>
 
       <!-- ── Hamburger ── -->
@@ -97,23 +103,34 @@
           <span class="drawer-num">0{{ navLinks.indexOf(link) + 1 }}</span>
           {{ link.label }}
         </a>
-        <a href="/login" class="btn-primary navbar__drawer-cta">
+
+        <!-- Logged out: GET STARTED -->
+        <a v-if="!isLoggedIn" href="/login" class="btn-primary navbar__drawer-cta">
           GET STARTED
           <span class="btn-arrow">→</span>
         </a>
+
+        <!-- Logged in: LOG OUT -->
+        <button v-else class="btn-primary navbar__drawer-cta" :disabled="loggingOut" @click="handleLogout">
+          {{ loggingOut ? 'LOGGING OUT...' : 'LOG OUT' }}
+          <span class="btn-arrow">→</span>
+        </button>
       </nav>
     </transition>
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { authService } from '@/services/auth.js'
+
+const router = useRouter()
 
 const navLinks = [
   { label: 'HOME',     href: '/' },
   { label: 'Planning', href: '/planning' },
-  { label: 'File',      href: '/createfile' },
-  // { label: 'DOCS',         href: '#docs' },
+  { label: 'File',      href: '/startbuilding' },
 ]
 
 const scrolled    = ref(false)
@@ -121,6 +138,25 @@ const menuOpen    = ref(false)
 const searchOpen  = ref(false)
 const activeLink  = ref(null)
 const searchInput = ref(null)
+const loggingOut  = ref(false)
+
+// Reactive login state — re-checks localStorage on every render
+const isLoggedIn = computed(() => authService.isLoggedIn())
+
+async function handleLogout() {
+  if (loggingOut.value) return  // Prevent double-click
+  loggingOut.value = true
+  menuOpen.value = false
+  try {
+    await authService.logout()
+  } catch (e) {
+    // Even if the API call fails, clear the local token
+    authService.removeToken()
+  } finally {
+    loggingOut.value = false
+    router.push('/login')
+  }
+}
 
 function onScroll() {
   scrolled.value = window.scrollY > 40
@@ -152,9 +188,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Syne:wght@400;500;700&display=swap');
 
-/* ════════════════════════════
-   CSS VARIABLES
-════════════════════════════ */
 :root {
   --bg:             #090909;
   --surface:        #0f0f0f;
@@ -172,22 +205,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   --font-body:      'Syne', sans-serif;
 }
 
-/* ════════════════════════════
-   NAVBAR SHELL
-════════════════════════════ */
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   z-index: 100;
   font-family: var(--font-body);
   background: transparent;
-  transition:
-    background  0.4s ease,
-    border-color 0.4s ease,
-    box-shadow  0.4s ease,
-    backdrop-filter 0.4s ease;
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease;
   border-bottom: 1px solid transparent;
 }
 
@@ -196,26 +220,14 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border-bottom-color: var(--border);
-  box-shadow:
-    0 1px 0 rgba(192, 57, 43, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 0 rgba(192, 57, 43, 0.08), 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-/* Scanline shimmer */
 .navbar__scanline {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--volcanic-dim) 20%,
-    var(--volcanic-glow) 50%,
-    var(--volcanic-dim) 80%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg, transparent 0%, var(--volcanic-dim) 20%, var(--volcanic-glow) 50%, var(--volcanic-dim) 80%, transparent 100%);
   background-size: 200% 100%;
   animation: scanline 4s linear infinite;
   opacity: 0.7;
@@ -226,9 +238,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   100% { background-position: -200% 0; }
 }
 
-/* ════════════════════════════
-   INNER LAYOUT
-════════════════════════════ */
 .navbar__inner {
   display: flex;
   align-items: center;
@@ -239,9 +248,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   z-index: 2;
 }
 
-/* ════════════════════════════
-   LOGO
-════════════════════════════ */
 .navbar__logo {
   display: flex;
   align-items: center;
@@ -263,9 +269,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   transform: rotate(30deg) scale(1.1);
 }
 
-.hex-outline {
-  animation: hexPulse 3s ease-in-out infinite;
-}
+.hex-outline { animation: hexPulse 3s ease-in-out infinite; }
 
 @keyframes hexPulse {
   0%, 100% { stroke: var(--volcanic);      opacity: 1; }
@@ -279,16 +283,10 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-primary);
-  transition: color 0.2s;
 }
 
-.navbar__logo-accent {
-  color: var(--volcanic-glow);
-}
+.navbar__logo-accent { color: var(--volcanic-glow); }
 
-/* ════════════════════════════
-   NAV LINKS
-════════════════════════════ */
 .navbar__links {
   display: flex;
   align-items: center;
@@ -312,9 +310,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 }
 
 .navbar__link:hover,
-.navbar__link--active {
-  color: var(--text-primary);
-}
+.navbar__link--active { color: var(--text-primary); }
 
 .navbar__link-bar {
   display: block;
@@ -327,15 +323,12 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 }
 
 .navbar__link:hover .navbar__link-bar,
-.navbar__link--active .navbar__link-bar {
-  width: 100%;
-}
+.navbar__link--active .navbar__link-bar { width: 100%; }
 
 .navbar__link--active .navbar__link-text::before {
   content: '';
   display: inline-block;
-  width: 4px;
-  height: 4px;
+  width: 4px; height: 4px;
   border-radius: 50%;
   background: var(--volcanic-glow);
   box-shadow: 0 0 6px var(--volcanic-glow);
@@ -349,9 +342,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   50%       { opacity: 0.5; transform: scale(0.6); }
 }
 
-/* ════════════════════════════
-   RIGHT SIDE
-════════════════════════════ */
 .navbar__right {
   display: flex;
   align-items: center;
@@ -391,6 +381,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
+  cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease;
   position: relative;
   overflow: hidden;
@@ -407,11 +398,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 .navbar__cta:hover::before { transform: translateX(100%); }
 
-.navbar__cta:hover {
+.navbar__cta:hover:not(:disabled) {
   background: rgba(192, 57, 43, 0.2);
   border-color: var(--volcanic-glow);
   box-shadow: 0 0 18px rgba(192,57,43,0.25), inset 0 0 12px rgba(192,57,43,0.06);
   transform: translateY(-1px);
+}
+
+.navbar__cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .navbar__cta-arrow {
@@ -419,19 +416,15 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   font-size: 13px;
 }
 
-.navbar__cta:hover .navbar__cta-arrow { transform: translateX(4px); }
+.navbar__cta:hover:not(:disabled) .navbar__cta-arrow { transform: translateX(4px); }
 
-/* ════════════════════════════
-   HAMBURGER
-════════════════════════════ */
 .navbar__burger {
   display: none;
   flex-direction: column;
   justify-content: center;
   align-items: flex-end;
   gap: 5px;
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   background: none;
   border: none;
   cursor: pointer;
@@ -461,19 +454,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   transform: translateY(6.5px) rotate(45deg);
   background: var(--volcanic-glow);
 }
-.navbar--menu-open .navbar__burger-line:nth-child(2) {
-  opacity: 0;
-  width: 0;
-}
+.navbar--menu-open .navbar__burger-line:nth-child(2) { opacity: 0; width: 0; }
 .navbar--menu-open .navbar__burger-line:nth-child(3) {
   width: 20px;
   transform: translateY(-6.5px) rotate(-45deg);
   background: var(--volcanic-glow);
 }
 
-/* ════════════════════════════
-   SEARCH BAR
-════════════════════════════ */
 .navbar__search-bar {
   display: flex;
   align-items: center;
@@ -515,10 +502,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   transition: color 0.2s, background 0.2s;
 }
 
-.navbar__search-close:hover {
-  color: var(--text-primary);
-  background: rgba(255,255,255,0.05);
-}
+.navbar__search-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
 
 .search-slide-enter-active,
 .search-slide-leave-active {
@@ -529,15 +513,9 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .search-slide-enter-from,
 .search-slide-leave-to { max-height: 0; opacity: 0; }
 
-/* ════════════════════════════
-   MOBILE DRAWER
-════════════════════════════ */
 .navbar__drawer {
   position: fixed;
-  top: 72px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 72px; left: 0; right: 0; bottom: 0;
   background: rgba(9,9,9,0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -554,8 +532,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 .navbar__drawer-hex {
   position: absolute;
-  right: -2rem;
-  top: 50%;
+  right: -2rem; top: 50%;
   transform: translateY(-50%);
   font-size: 280px;
   color: rgba(192,57,43,0.04);
@@ -615,12 +592,19 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   border: 1px solid rgba(231,76,60,0.4);
   box-shadow: 0 4px 20px rgba(192,57,43,0.3);
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.2s;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
 }
 
-.navbar__drawer-cta:hover {
+.navbar__drawer-cta:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(192,57,43,0.45);
+}
+
+.navbar__drawer-cta:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .drawer-slide-enter-active,
@@ -630,9 +614,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .drawer-slide-enter-from,
 .drawer-slide-leave-to { opacity: 0; transform: translateY(-16px); }
 
-/* ════════════════════════════
-   RESPONSIVE
-════════════════════════════ */
 @media (max-width: 900px) {
   .navbar__links { display: none; }
   .navbar__right { display: none; }

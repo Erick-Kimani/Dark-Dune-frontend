@@ -1,34 +1,35 @@
 <template>
   <div class="home-wrapper">
 
-    <!-- ── Hex canvas overlay ── -->
+    <!-- Hex canvas overlay -->
     <canvas class="hex-canvas" ref="hexCanvas"></canvas>
 
-    <!-- ── Hero Section ── -->
+    <!-- ── Hero ── -->
     <section class="hero">
       <div class="hero-bg">
-        <div class="hero-img-wrap">
-          <img src="/Images/Universe.jpg" class="hero-bg-img" alt="" aria-hidden="true" />
-          <div class="hero-img-vignette"></div>
-        </div>
+        <img src="/Images/Universe.jpg" class="hero-bg-img" alt="" aria-hidden="true" />
+        <div class="hero-overlay"></div>
       </div>
-
 
       <div class="hero-content">
         <div class="hero-tag">
-          <span class="tag-dot"></span> Universal File Intelligence
+          <span class="tag-dot"></span>
+          Universal File Intelligence
         </div>
+
         <h1 class="hero-title">
           Connect.<br />
           <span class="title-accent">Organize.</span><br />
           Compile.
         </h1>
+
         <p class="hero-sub">
           Wire your files like a circuit. Link by order, date, or category —
           then let DarkDune compile them into something powerful.
         </p>
+
         <div class="hero-actions">
-          <router-link to="/payment" class="btn-primary">
+          <router-link to="/startbuilding" class="btn-primary">
             <span>Start Building</span>
             <span class="btn-arrow">→</span>
           </router-link>
@@ -36,42 +37,99 @@
         </div>
       </div>
 
-      <!-- Scroll hint -->
       <div class="scroll-hint">
         <div class="scroll-line"></div>
         <span>scroll</span>
       </div>
     </section>
 
-    <!-- ── Feature Hints ── -->
+    <!-- ── Services ── -->
     <section class="features" id="features">
-      <div class="features-inner">
-
+      <div class="section-inner">
         <div class="section-label">
           <span class="label-line"></span>
-          What it does
+          Services
           <span class="label-line"></span>
         </div>
 
         <div class="feat-grid">
-
-          <div class="feat-card" v-for="(feat, i) in features" :key="i"
-               :style="{ '--delay': i * 0.1 + 's' }">
-            <div class="feat-hex">
-              <span class="feat-icon">{{ feat.icon }}</span>
-            </div>
+          <div class="feat-card" v-for="(feat, i) in features" :key="i" :style="{ '--delay': i * 0.12 + 's' }">
+            <div class="feat-hex">{{ feat.icon }}</div>
             <h3 class="feat-title">{{ feat.title }}</h3>
             <p class="feat-desc">{{ feat.desc }}</p>
-            <div class="feat-glow"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Demo ── -->
+    <section class="demo" id="demo">
+      <div class="section-inner">
+        <div class="section-label">
+          <span class="label-line"></span>
+          See it work
+          <span class="label-line"></span>
+        </div>
+
+        <p class="demo-sub">
+          A file comes in, becomes a native DarkDune document, and links to
+          the next one — all without touching the original.
+        </p>
+
+        <div class="demo-stage">
+          <!-- Node A: incoming file -->
+          <div class="demo-node demo-node-a">
+            <div class="demo-icon demo-icon-file">
+              <span>DOCX</span>
+            </div>
+            <div class="demo-node-label">imported.docx</div>
           </div>
 
+          <!-- Convert arrow + pulse -->
+          <div class="demo-convert">
+            <svg viewBox="0 0 120 24" class="demo-convert-svg">
+              <line x1="4" y1="12" x2="100" y2="12" class="demo-convert-line" />
+              <polygon points="100,6 116,12 100,18" class="demo-convert-arrow" />
+            </svg>
+            <span class="demo-convert-label">auto-convert</span>
+          </div>
+
+          <!-- Node B: native .dd document, content typing in -->
+          <div class="demo-node demo-node-b">
+            <div class="demo-icon demo-icon-dd">
+              <span>DD</span>
+            </div>
+            <div class="demo-doc">
+              <div class="demo-doc-line demo-doc-line-1"></div>
+              <div class="demo-doc-line demo-doc-line-2"></div>
+              <div class="demo-doc-line demo-doc-line-3"></div>
+            </div>
+            <div class="demo-node-label">native · editable</div>
+          </div>
+
+          <!-- Link connector to a second file -->
+          <div class="demo-link">
+            <svg viewBox="0 0 24 120" class="demo-link-svg">
+              <line x1="12" y1="4" x2="12" y2="116" class="demo-link-line" />
+              <circle cx="12" cy="40" r="3" class="demo-link-node demo-link-node-1" />
+              <circle cx="12" cy="60" r="3" class="demo-link-node demo-link-node-2" />
+              <circle cx="12" cy="80" r="3" class="demo-link-node demo-link-node-3" />
+            </svg>
+          </div>
+
+          <div class="demo-node demo-node-c">
+            <div class="demo-icon demo-icon-img">
+              <span>IMG</span>
+            </div>
+            <div class="demo-node-label">linked · annotated</div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ── How it works ── -->
     <section class="how" id="how">
-      <div class="how-inner">
+      <div class="section-inner">
         <div class="section-label">
           <span class="label-line"></span>
           How it works
@@ -96,11 +154,6 @@
       </div>
     </section>
 
-    <!-- ── CTA Banner ── -->
-    
-
-    <!-- ── Footer ── -->
-  
   </div>
 </template>
 
@@ -115,18 +168,23 @@ export default {
       features: [
         {
           icon: '⬡',
-          title: 'Organize',
-          desc: 'Group files by order, date, or category into clean, structured collections.',
+          title: 'Universal Import',
+          desc: 'Bring in documents, spreadsheets, and images from any source — DarkDune accepts the formats you already work with.',
+        },
+        {
+          icon: '◈',
+          title: 'Native Editing',
+          desc: 'Every file you open is converted into a DarkDune-native document, safe to edit freely while the original stays untouched.',
         },
         {
           icon: '⟶',
-          title: 'Link',
-          desc: 'Connect files with visual string connectors — like wiring nodes in a flow diagram.',
+          title: 'Visual Linking',
+          desc: 'Wire files together on the canvas — connect by order, date, or category to define how they relate.',
         },
         {
-          icon: '⚙',
-          title: 'Compile',
-          desc: 'Merge linked files into documents, reports, tests, or any output you need.',
+          icon: '✎',
+          title: 'Image Annotation',
+          desc: 'Mark up images directly with strokes and notes, without altering the source file underneath.',
         },
       ],
       steps: [
@@ -135,12 +193,12 @@ export default {
           desc: 'Drop in files from any source — documents, code, media, data.',
         },
         {
-          title: 'Define the links',
-          desc: 'Draw string connections between files to define relationships and flow.',
+          title: 'Open & edit natively',
+          desc: 'DarkDune converts what you open into an editable native document automatically.',
         },
         {
-          title: 'Set your logic',
-          desc: 'Order by date, category, or custom sequence. Save the pipeline.',
+          title: 'Define the links',
+          desc: 'Draw connections between files to define relationships and flow.',
         },
         {
           title: 'Compile & export',
@@ -177,26 +235,18 @@ export default {
 
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        const size = 36
-        const w = size * 2
-        const h = Math.sqrt(3) * size
-        const cols = Math.ceil(canvas.width  / w)  + 2
-        const rows = Math.ceil(canvas.height / h)  + 2
+        const size = 36, w = size * 2, h = Math.sqrt(3) * size
+        const cols = Math.ceil(canvas.width  / w) + 2
+        const rows = Math.ceil(canvas.height / h) + 2
 
         for (let row = -1; row < rows; row++) {
           for (let col = -1; col < cols; col++) {
             const x = col * w * 0.75
             const y = row * h + (col % 2 === 0 ? 0 : h / 2)
-            const dist = Math.sqrt(
-              Math.pow(x - canvas.width  / 2, 2) +
-              Math.pow(y - canvas.height / 2, 2)
-            )
-            const maxDist = Math.sqrt(
-              Math.pow(canvas.width  / 2, 2) +
-              Math.pow(canvas.height / 2, 2)
-            )
-            const pulse = Math.sin(tick * 0.015 + dist * 0.008) * 0.5 + 0.5
-            const alpha = (1 - dist / maxDist) * 0.18 * pulse + 0.04
+            const dist    = Math.sqrt(Math.pow(x - canvas.width / 2, 2) + Math.pow(y - canvas.height / 2, 2))
+            const maxDist = Math.sqrt(Math.pow(canvas.width / 2, 2) + Math.pow(canvas.height / 2, 2))
+            const pulse   = Math.sin(tick * 0.015 + dist * 0.008) * 0.5 + 0.5
+            const alpha   = (1 - dist / maxDist) * 0.18 * pulse + 0.04
 
             ctx.beginPath()
             for (let i = 0; i < 6; i++) {

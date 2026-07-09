@@ -10,7 +10,7 @@
             <div class="branding-icon">
               <svg viewBox="0 0 48 48" fill="none"><polygon points="24,2 44,13 44,35 24,46 4,35 4,13" stroke="currentColor" stroke-width="1.5" fill="none"/><polygon points="24,10 37,17 37,31 24,38 11,31 11,17" stroke="currentColor" stroke-width="1" fill="none" opacity="0.4"/></svg>
             </div>
-            <h1 class="branding-title">Join Project X</h1>
+            <h1 class="branding-title">Join Dark Dune</h1>
             <p class="branding-desc">Start organizing your files smarter, collaborate with teams, and unlock powerful features.</p>
             <div class="branding-features">
               <div class="feature">
@@ -198,7 +198,7 @@ export default {
 
   mounted() {
     if (authService.isLoggedIn()) {
-      this.$router.push('/createfile')
+      this.$router.push('/startbuilding')
     }
     this.drawHexGrid()
     window.addEventListener('resize', this.drawHexGrid)

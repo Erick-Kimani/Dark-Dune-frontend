@@ -1,20 +1,25 @@
 <template>
-  <div class="app-wrapper">
-    <Navbar />
-    <main class="main-content">
-      <router-view />
-    </main>
-    <Footer />
-  </div>
+  <Navbar v-if="!isEditorRoute" />
+  <router-view />
+  <Footer v-if="!isEditorRoute" />
 </template>
 
-<script setup>
+<script>
 import Navbar from '@/Components/Navbar.vue'
 import Footer from '@/Components/Footer.vue'
+
+export default {
+  components: { Navbar, Footer },
+
+  computed: {
+    isEditorRoute() {
+      return this.$route.path.startsWith('/editor')
+    }
+  }
+}
 </script>
 
 <style>
-/* Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -24,7 +29,7 @@ import Footer from '@/Components/Footer.vue'
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #090909;  /* matches your footer/page dark bg */
+  background-color: #090909;
 }
 
 .app-wrapper {

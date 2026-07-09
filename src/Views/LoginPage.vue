@@ -40,7 +40,7 @@
           <div class="form-wrapper">
             <div class="form-header">
               <h2 class="form-title">Login</h2>
-              <p class="form-subtitle">Access your Project X account</p>
+              <p class="form-subtitle">Access your Dark Dune account</p>
             </div>
 
             <!-- API error banner -->
@@ -110,7 +110,7 @@
 
               <!-- Submit Button -->
               <button type="submit" class="btn-submit" :disabled="isLoading">
-                <span v-if="!isLoading">Login to Project X</span>
+                <span v-if="!isLoading">Login to Dark Dune</span>
                 <span v-else class="loading-spinner">
                   <svg viewBox="0 0 24 24" fill="none" class="spin"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="60" stroke-dashoffset="20" stroke-linecap="round"/></svg>
                   Signing in...
@@ -119,7 +119,7 @@
 
               <!-- Sign Up Link -->
               <p class="form-footer">
-                New to Project X? <router-link to="/signup" class="link-primary">Create an account</router-link>
+                New to Dark Dune? <router-link to="/signup" class="link-primary">Create an account</router-link>
               </p>
 
             </form>
@@ -159,7 +159,7 @@ export default {
   mounted() {
     // Redirect if already logged in
     if (authService.isLoggedIn()) {
-      this.$router.push('/createfile')
+      this.$router.push('/')
     }
     this.drawHexGrid()
     window.addEventListener('resize', this.drawHexGrid)
@@ -198,7 +198,7 @@ export default {
           this.formData.rememberMe
         )
         this.successMessage = 'Login successful! Redirecting...'
-        setTimeout(() => this.$router.push('/createfile'), 800)
+        setTimeout(() => this.$router.push('/'), 800)
 
       } catch (err) {
         if (err.status === 401) {
