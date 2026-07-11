@@ -7,7 +7,7 @@
     <!-- ── Hero ── -->
     <section class="hero">
       <div class="hero-bg">
-        <img src="/Images/Universe.jpg" class="hero-bg-img" alt="" aria-hidden="true" />
+        <img src="/Images/Desert background.png" class="hero-bg-img" alt="" aria-hidden="true" />
         <div class="hero-overlay"></div>
       </div>
 

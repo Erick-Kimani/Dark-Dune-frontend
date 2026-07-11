@@ -128,9 +128,11 @@ import { authService } from '@/services/auth.js'
 const router = useRouter()
 
 const navLinks = [
-  { label: 'HOME',     href: '/' },
-  { label: 'Planning', href: '/planning' },
+  { label: 'HOME',      href: '/' },
   { label: 'File',      href: '/startbuilding' },
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'AI Assistant', href: '/ai-assistant' },
+  { label: 'Planning',  href: '/planning' },
 ]
 
 const scrolled    = ref(false)

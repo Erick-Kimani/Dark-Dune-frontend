@@ -140,6 +140,9 @@
           <button class="we-btn" @click="$refs.imgInput.click()" title="Insert image">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
+          <button class="we-btn" @click="toggleShapeDialog" title="Insert shape">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="7" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M7 21L11 13H3L7 21Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          </button>
           <button class="we-btn" @click="toggleFindReplace" title="Find & Replace (Ctrl+H)">
             <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11H14M11 8V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
@@ -200,6 +203,32 @@
           </div>
           <div class="we-td-label">{{ hoverRow > 0 ? hoverRow + ' × ' + hoverCol : 'Hover to select' }}</div>
           <button class="we-td-cancel" @click="showTableDialog = false">Cancel</button>
+        </div>
+      </transition>
+
+      <!-- Shape insert dialog -->
+      <transition name="fade">
+        <div v-if="showShapeDialog" class="we-table-dialog we-shape-dialog">
+          <div class="we-td-title">Insert Shape</div>
+          <div class="we-shape-grid">
+            <button
+              v-for="shape in shapes" :key="shape.type"
+              class="we-shape-cell"
+              :title="shape.label"
+              @click="insertShape(shape.type)"
+              v-html="shape.icon"
+            ></button>
+          </div>
+          <div class="we-shape-colors">
+            <button
+              v-for="c in shapeColors" :key="c"
+              class="we-shape-swatch"
+              :class="{ active: shapeColor === c }"
+              :style="{ background: c }"
+              @click="shapeColor = c"
+            ></button>
+          </div>
+          <button class="we-td-cancel" @click="showShapeDialog = false">Cancel</button>
         </div>
       </transition>
 
@@ -296,6 +325,20 @@ export default {
       hoverRow:        0,
       hoverCol:        0,
 
+      showShapeDialog: false,
+      shapeColor:      '#c0392b',
+      shapeColors:     ['#c0392b', '#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#2c3e50', '#ffffff'],
+      shapes: [
+        { type: 'rectangle', label: 'Rectangle', icon: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>' },
+        { type: 'circle',    label: 'Circle',    icon: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6"/></svg>' },
+        { type: 'triangle',  label: 'Triangle',  icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4L21 20H3L12 4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
+        { type: 'line',      label: 'Line',      icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 20L20 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' },
+        { type: 'arrow',     label: 'Arrow',     icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+        { type: 'star',      label: 'Star',      icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L14.6 9H22L16 13.5L18.2 21L12 16.8L5.8 21L8 13.5L2 9H9.4L12 2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>' },
+        { type: 'diamond',   label: 'Diamond',   icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3L21 12L12 21L3 12L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
+        { type: 'pentagon',  label: 'Pentagon',  icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 2L21 9L17.5 20H6.5L3 9L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
+      ],
+
       showFindReplace: false,
       findText:        '',
       replaceText:     '',
@@ -324,11 +367,18 @@ export default {
     } else {
       this.initEditor('')
     }
+    // Shapes carry their own native <input type="color"> / <input type="file">
+    // fill controls inside the contenteditable area (see insertShape). These
+    // are plain DOM, not Vue bindings, so we catch their events by delegation.
+    this.$refs.editor?.addEventListener('input', this.handleShapeColorInput)
+    this.$refs.editor?.addEventListener('change', this.handleShapeImageInput)
   },
 
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleShortcut)
     clearTimeout(this.autoSaveTimer)
+    this.$refs.editor?.removeEventListener('input', this.handleShapeColorInput)
+    this.$refs.editor?.removeEventListener('change', this.handleShapeImageInput)
   },
 
   methods: {
@@ -435,13 +485,49 @@ export default {
     },
 
     // ── Save ──
+    // A document opened via "New File" starts with no fileId at all —
+    // nothing has been persisted yet. The backend's /files validation
+    // only accepts real upload extensions/mime types (it never expects
+    // 'dd' directly — .dd is normally only ever produced server-side by
+    // convert-to-dd). So on first save we create a minimal, validated
+    // .txt placeholder record, immediately convert *that* to .dd via
+    // the same endpoint every uploaded file goes through, then push
+    // this document's real HTML content onto the resulting .dd record.
+    // Every save after that is just a normal update.
+    //
+    // NOTE: the seed record is intentionally never deleted. The seed
+    // and its converted .dd are linked on the backend, and deleting the
+    // seed cascade-deletes the .dd along with it (confirmed: it 404s on
+    // the very next save). Instead the seed's *name* itself carries the
+    // "__dd_seed__" marker (not a `tags` field — we can't be sure the
+    // backend actually persists arbitrary custom fields like tags back,
+    // so the filter in Startbuilding.vue can't safely depend on that).
+    // The seed keeps the doc's real title only in `description`, purely
+    // for debugging — nothing user-facing ever reads it.
     async saveDocument() {
-      if (!this.fileId) return
       this.saveStatus = 'saving'
+      const content = this.$refs.editor?.innerHTML || ''
+      const title   = this.docTitle?.trim() || 'Untitled Document'
       try {
-        const content = this.$refs.editor?.innerHTML || ''
+        if (!this.fileId) {
+          const seedName = `__dd_seed__${Date.now()}`
+          const seed = await this.api('POST', '/files', {
+            name:          seedName,
+            original_name: `${seedName}.txt`,
+            local_path:    `${seedName}.txt`,
+            mime_type:     'text/plain',
+            extension:     'txt',
+            size:          0,
+            description:   `Internal placeholder for "${title}" — safe to ignore.`,
+            tags:          ['__dd_seed__'],
+          })
+          const converted = await this.api('POST', `/files/${seed.file.id}/convert-to-dd`)
+          this.fileId  = converted.file.id
+          this.fileExt = 'dd'
+          this.$router.replace(`/editor/${this.fileId}`)
+        }
         await this.api('PUT', `/files/${this.fileId}/content`, { content })
-        await this.api('PUT', `/files/${this.fileId}`, { name: this.docTitle })
+        await this.api('PUT', `/files/${this.fileId}`, { name: title })
         this.saveStatus = 'saved'
       } catch (err) {
         this.saveStatus = 'unsaved'
@@ -463,6 +549,7 @@ export default {
     // ── Table ──
     insertTable() {
       this.showTableDialog = true
+      this.showShapeDialog = false
       this.hoverRow        = 0
       this.hoverCol        = 0
     },
@@ -500,6 +587,111 @@ export default {
       }
       reader.readAsDataURL(file)
       e.target.value = ''
+    },
+
+    // ── Shapes ──
+    toggleShapeDialog() {
+      this.showShapeDialog = !this.showShapeDialog
+      this.showTableDialog = false
+    },
+
+    // CSS clip-path for each closed shape type, used on the fillable
+    // layer so it can hold a solid color OR a background image.
+    // 'line' and 'arrow' have no interior area, so they're excluded —
+    // they stay simple strokes, not fillable/textable blocks.
+    shapeClipPath(type) {
+      const paths = {
+        rectangle: 'none',
+        circle:    'none',
+        triangle:  'polygon(50% 0%, 100% 100%, 0% 100%)',
+        diamond:   'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+        pentagon:  'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+        star:      'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+      }
+      return paths[type] || paths.rectangle
+    },
+
+    isFillableShape(type) {
+      return !['line', 'arrow'].includes(type)
+    },
+
+    // Inserts a resizable shape block into the document. The outer
+    // wrapper is contenteditable="false" (so resizing/dragging it
+    // doesn't get mangled as text), but it contains a genuinely
+    // contenteditable text layer so the user can type inside the
+    // shape, plus small color-fill / image-fill controls that appear
+    // on hover.
+    insertShape(type) {
+      this.showShapeDialog = false
+      this.$refs.editor?.focus()
+      const color = this.shapeColor
+      let html
+
+      if (!this.isFillableShape(type)) {
+        const strokes = {
+          line:  `<line x1="6" y1="114" x2="194" y2="6" stroke="${color}" stroke-width="4" stroke-linecap="round"/>`,
+          arrow: `<path d="M6 60H176M176 60L128 18M176 60L128 102" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`,
+        }
+        html = `<div class="we-doc-shape we-doc-shape--line" contenteditable="false" data-shape="${type}">` +
+          `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">${strokes[type]}</svg>` +
+          `</div>`
+      } else {
+        const clipPath = this.shapeClipPath(type)
+        const shapeStyle = type === 'circle' ? 'border-radius:50%;' : `clip-path:${clipPath};`
+        html = `<div class="we-doc-shape" contenteditable="false" data-shape="${type}">` +
+            `<div class="we-shape-fill" style="${shapeStyle}background-color:${color};"></div>` +
+            `<div class="we-shape-text" contenteditable="true" data-placeholder="Add text..."></div>` +
+            `<div class="we-shape-controls" contenteditable="false">` +
+              `<label class="we-shape-ctrl-btn" title="Fill color">` +
+                `<input type="color" class="we-shape-color-input" value="${color}">` +
+                `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><circle cx="9" cy="10" r="1.3" fill="currentColor"/><circle cx="15" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="15" r="1.3" fill="currentColor"/></svg>` +
+              `</label>` +
+              `<label class="we-shape-ctrl-btn" title="Fill with image">` +
+                `<input type="file" accept="image/*" class="we-shape-image-input" hidden>` +
+                `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.4"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
+              `</label>` +
+            `</div>` +
+          `</div>`
+      }
+
+      document.execCommand('insertHTML', false, html)
+      this.onInput()
+    },
+
+    // Live color-fill: the shape's <input type="color"> fires native
+    // 'input' events as the user drags the picker.
+    handleShapeColorInput(e) {
+      const target = e.target
+      if (!target.classList || !target.classList.contains('we-shape-color-input')) return
+      const fill = target.closest('.we-doc-shape')?.querySelector('.we-shape-fill')
+      if (fill) {
+        fill.style.backgroundImage = 'none'
+        fill.style.backgroundColor = target.value
+      }
+      this.onInput()
+    },
+
+    // Image-fill: reads the chosen file and applies it as a cover
+    // background on the shape's fill layer, replacing any flat color.
+    handleShapeImageInput(e) {
+      const target = e.target
+      if (!target.classList || !target.classList.contains('we-shape-image-input')) return
+      const file = target.files && target.files[0]
+      if (!file) return
+      const shapeEl = target.closest('.we-doc-shape')
+      const fill    = shapeEl?.querySelector('.we-shape-fill')
+      const reader  = new FileReader()
+      reader.onload = (ev) => {
+        if (fill) {
+          fill.style.backgroundImage    = `url(${ev.target.result})`
+          fill.style.backgroundSize     = 'cover'
+          fill.style.backgroundPosition = 'center'
+          fill.style.backgroundColor    = 'transparent'
+        }
+        this.onInput()
+      }
+      reader.readAsDataURL(file)
+      target.value = ''
     },
 
     // ── Find & Replace ──
@@ -761,6 +953,60 @@ export default {
   font-size: 11px; cursor: pointer; transition: all 0.12s;
 }
 .we-td-cancel:hover { border-color: #e74c3c; color: #e74c3c; }
+
+/* Shape dialog */
+.we-shape-dialog { align-items: stretch; }
+.we-shape-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.we-shape-cell {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: #3a3a3a; border: 1px solid #555; border-radius: 6px;
+  color: #d0ccc6; cursor: pointer; transition: all 0.12s;
+}
+.we-shape-cell svg { width: 18px; height: 18px; }
+.we-shape-cell:hover { border-color: #c0392b; color: #e74c3c; background: rgba(192,57,43,0.15); }
+.we-shape-colors { display: flex; gap: 6px; justify-content: center; padding-top: 2px; }
+.we-shape-swatch {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; box-shadow: 0 0 0 1px #555;
+}
+.we-shape-swatch.active { border-color: #fff; box-shadow: 0 0 0 1px #c0392b; }
+
+/* Inserted shapes — resizable, sit inline like an image */
+.we-content :deep(.we-doc-shape) {
+  position: relative; display: inline-block; width: 200px; height: 120px;
+  min-width: 40px; min-height: 30px; max-width: 100%;
+  margin: 0.5em 0; resize: both; overflow: hidden; vertical-align: top;
+}
+.we-content :deep(.we-doc-shape--line) { resize: both; }
+.we-content :deep(.we-doc-shape svg) { width: 100%; height: 100%; display: block; }
+
+.we-content :deep(.we-shape-fill) {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.we-content :deep(.we-shape-text) {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 10%; box-sizing: border-box; outline: none;
+  color: #1a1a1a; font-size: 14px; line-height: 1.3; cursor: text; overflow: hidden;
+}
+.we-content :deep(.we-shape-text:empty::before) {
+  content: attr(data-placeholder); color: rgba(0,0,0,0.35); pointer-events: none;
+}
+
+.we-content :deep(.we-shape-controls) {
+  position: absolute; top: 5px; right: 5px; display: flex; gap: 4px;
+  opacity: 0; transition: opacity 0.15s; pointer-events: none;
+}
+.we-content :deep(.we-doc-shape:hover .we-shape-controls) { opacity: 1; pointer-events: auto; }
+.we-content :deep(.we-shape-ctrl-btn) {
+  display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+  background: rgba(20,20,20,0.72); border: 1px solid rgba(255,255,255,0.25); border-radius: 5px;
+  color: #ede8df; cursor: pointer;
+}
+.we-content :deep(.we-shape-ctrl-btn:hover) { background: #c0392b; border-color: #c0392b; }
+.we-content :deep(.we-shape-ctrl-btn svg) { width: 13px; height: 13px; pointer-events: none; }
+.we-content :deep(.we-shape-color-input) {
+  position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;
+}
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

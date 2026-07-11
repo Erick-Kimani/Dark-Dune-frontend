@@ -7,27 +7,11 @@
       <!-- ── Header ── -->
       <div class="page-header">
         <div class="page-header__left">
-          <div class="page-breadcrumb">
-            <router-link to="/" class="breadcrumb-link">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Home
-            </router-link>
-            <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="breadcrumb-current">Start Building</span>
-          </div>
-          <h1 class="page-title">Start Building</h1>
+         
+          <h1 class="page-title"><i>Start Building</i></h1>
           <p class="page-subtitle">Link files and documents from your device using connectors</p>
         </div>
-        <div class="page-header__right">
-          <button class="btn-ghost" @click="$router.push('/')">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Cancel
-          </button>
-        </div>
+        
       </div>
 
       <!-- ── Global error ── -->
@@ -56,6 +40,10 @@
             </p>
           </div>
           <div class="linker-controls">
+            <button class="btn-control btn-new" @click="$router.push('/editor')" title="Start a blank document from scratch">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              New File
+            </button>
             <label class="btn-control btn-upload" title="Register a file from your device">
               <svg viewBox="0 0 24 24" fill="none"><path d="M21 15V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V15M12 3V15M12 3L7 8M12 3L17 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Add File
@@ -241,6 +229,11 @@
 import { authService } from '@/services/auth.js'
 import FileViewerModal from '@/Components/FileViewerModal.vue'
 import mammoth from 'mammoth'
+import * as XLSX from 'xlsx'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 const BASE_URL = 'http://localhost:8000/api'
 
@@ -304,6 +297,12 @@ export default {
     },
 
     // ── Load data ──
+    // Opening a file in DarkDune Writer creates a linked native .dd copy
+    // (see WordEditor's loadFile -> convert-to-dd). That .dd copy is an
+    // editing artifact, not something the user uploaded — showing both
+    // it and the original on this canvas reads as duplicate files, so
+    // Start Building only ever renders the original, real-format files.
+    // The .dd copies are surfaced in the Dashboard instead.
     async loadFilesAndLinks() {
       this.isLoading   = true
       this.globalError = ''
@@ -317,17 +316,32 @@ export default {
         const colW   = 200, rowH = 110
         const cols   = Math.max(1, Math.floor((canvas?.offsetWidth || 800) / colW))
 
-        this.nodes = filesRes.files.map((file, i) => ({
+        // Also excludes "New File" seed records (see WordEditor's
+        // saveDocument) — internal stepping stones, not real uploads.
+        // Checked by name marker first since that's guaranteed to round
+        // -trip through the backend; tags are checked too in case the
+        // backend does persist them, but aren't relied on alone.
+        const realFiles = (filesRes.files || []).filter(file => {
+          if (file.extension === 'dd') return false
+          if (String(file.name || '').startsWith('__dd_seed__')) return false
+          if ((file.tags || []).includes('__dd_seed__')) return false
+          return true
+        })
+
+        this.nodes = realFiles.map((file, i) => ({
           ...file,
           x: 40 + (i % cols) * colW,
           y: 30 + Math.floor(i / cols) * rowH,
         }))
 
-        this.connections = linksRes.links.map(link => ({
-          id:   link.id,
-          from: link.source_file_id,
-          to:   link.target_file_id,
-        }))
+        const visibleIds = new Set(this.nodes.map(n => n.id))
+        this.connections = (linksRes.links || [])
+          .filter(link => visibleIds.has(link.source_file_id) && visibleIds.has(link.target_file_id))
+          .map(link => ({
+            id:   link.id,
+            from: link.source_file_id,
+            to:   link.target_file_id,
+          }))
 
       } catch (err) {
         this.globalError = err?.data?.error || 'Could not load files. Make sure the backend is running.'
@@ -392,6 +406,10 @@ export default {
     // so a broken/unsupported file still registers normally — it just
     // won't have pre-extracted content, and convert-to-dd will fall
     // back to a placeholder note for it instead.
+    //
+    // Only covers extensions FileController's allowedExtensions() /
+    // allowedMimeTypes() actually accept — anything else 422s before
+    // this code would ever run, so there's no point extracting for it.
     async extractContent(file, ext) {
       try {
         if (ext === 'docx') {
@@ -399,14 +417,124 @@ export default {
           const result = await mammoth.convertToHtml({ arrayBuffer })
           return result.value || null
         }
-        if (ext === 'txt' || ext === 'csv') {
-          return await file.text()
+
+        if (ext === 'txt') {
+          const text = await file.text()
+          return this.textToParagraphs(text)
         }
+
+        if (ext === 'rtf') {
+          const text = await file.text()
+          return this.textToParagraphs(this.rtfToPlainText(text))
+        }
+
+        if (ext === 'csv') {
+          const text = await file.text()
+          return this.csvToTable(text)
+        }
+
+        if (ext === 'xls' || ext === 'xlsx') {
+          return await this.spreadsheetToHtml(file)
+        }
+
+        if (ext === 'pdf') {
+          return await this.pdfToHtml(file)
+        }
+
+        if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+          return await this.imageToHtml(file)
+        }
+
+        if (ext === 'svg') {
+          const text = await file.text()
+          return `<p>${text.replace(/<script[\s\S]*?<\/script>/gi, '')}</p>`
+        }
+
         return null
       } catch (err) {
         console.error('Content extraction failed, continuing without it', err)
         return null
       }
+    },
+
+    // Plain text -> <p> per line/paragraph
+    textToParagraphs(text) {
+      return text
+        .split(/\r?\n\r?\n|\r?\n/)
+        .map(line => `<p>${this.escapeHtml(line) || '<br>'}</p>`)
+        .join('')
+    },
+
+    // Strip RTF control words/groups down to readable plain text
+    rtfToPlainText(rtf) {
+      return rtf
+        .replace(/\\par[d]?/g, '\n')
+        .replace(/\{\\[^{}]*\}/g, '')
+        .replace(/\\'[0-9a-fA-F]{2}/g, '')
+        .replace(/\\[a-zA-Z]+-?\d* ?/g, '')
+        .replace(/[{}]/g, '')
+        .trim()
+    },
+
+    // CSV -> an editable HTML table, same markup the editor's own
+    // "Insert table" tool produces
+    csvToTable(text) {
+      const rows = text.split(/\r?\n/).filter(r => r.length)
+      if (!rows.length) return null
+      let html = '<table class="we-doc-table"><tbody>'
+      for (const row of rows) {
+        const cells = row.split(',')
+        html += '<tr>' + cells.map(c => `<td>${this.escapeHtml(c.trim())}</td>`).join('') + '</tr>'
+      }
+      html += '</tbody></table><p><br></p>'
+      return html
+    },
+
+    // xls / xlsx / ods -> HTML table via SheetJS (first sheet)
+    async spreadsheetToHtml(file) {
+      const arrayBuffer = await file.arrayBuffer()
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      const sheet = workbook.Sheets[firstSheetName]
+      if (!sheet) return null
+      const tableHtml = XLSX.utils.sheet_to_html(sheet, { id: undefined, editable: false })
+      // Re-tag the generated <table> so it picks up the editor's styling
+      return tableHtml.replace('<table', '<table class="we-doc-table"') + '<p><br></p>'
+    },
+
+    // PDF -> paragraphs of extracted text, one page at a time, via pdf.js
+    async pdfToHtml(file) {
+      const arrayBuffer = await file.arrayBuffer()
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      let html = ''
+      const maxPages = Math.min(pdf.numPages, 40) // guard against huge files
+      for (let i = 1; i <= maxPages; i++) {
+        const page = await pdf.getPage(i)
+        const content = await page.getTextContent()
+        const text = content.items.map(item => item.str).join(' ')
+        if (text.trim()) html += `<p>${this.escapeHtml(text.trim())}</p>`
+        if (i < maxPages) html += '<p><br></p>'
+      }
+      return html || null
+    },
+
+    // Images -> embedded as an editable <img> so they open directly
+    // inside the Word editor instead of just showing a placeholder note
+    async imageToHtml(file) {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      return `<p><img src="${dataUrl}" class="we-doc-img" style="max-width:100%;height:auto;" alt="${this.escapeHtml(file.name)}"/></p><p><br></p>`
+    },
+
+    escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
     },
 
     // ── Remove node ──
@@ -722,6 +850,8 @@ export default {
 .btn-control:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-upload { position: relative; cursor: pointer; }
 .btn-upload:hover { border-color: var(--volcanic-glow); color: var(--volcanic-glow); background: rgba(231,76,60,0.05); }
+.btn-new { background: var(--volcanic); border-color: var(--volcanic); color: #fff; }
+.btn-new:hover:not(:disabled) { background: var(--volcanic-glow); border-color: var(--volcanic-glow); color: #fff; }
 .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
 
 .linker-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }

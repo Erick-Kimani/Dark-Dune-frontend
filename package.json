@@ -12,11 +12,13 @@
     "axios": "^1.17.0",
     "leaflet": "^1.9.4",
     "mammoth": "^1.12.0",
+    "pdfjs-dist": "^4.0.379",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "beta",
     "vue-router": "^4.0.13",
-    "vuetify": "^4.0.7"
+    "vuetify": "^4.0.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
