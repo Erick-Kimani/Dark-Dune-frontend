@@ -7,7 +7,7 @@
     <!-- ── Hero ── -->
     <section class="hero">
       <div class="hero-bg">
-        <img src="/Images/Desert background.png" class="hero-bg-img" alt="" aria-hidden="true" />
+        <img src="/Images/black-sand-dunes-smartphone-wallpaper-free-image.webp" class="hero-bg-img" alt="" aria-hidden="true" />
         <div class="hero-overlay"></div>
       </div>
 
@@ -72,17 +72,26 @@
         </div>
 
         <p class="demo-sub">
-          A file comes in, becomes a native DarkDune document, and links to
+          Any file comes in, becomes a native DarkDune document, and links to
           the next one — all without touching the original.
         </p>
 
         <div class="demo-stage">
-          <!-- Node A: incoming file -->
-          <div class="demo-node demo-node-a">
-            <div class="demo-icon demo-icon-file">
-              <span>DOCX</span>
+
+          <!-- Consolidated input cluster: all accepted formats fan from one stack -->
+          <div class="demo-cluster">
+            <div
+              class="demo-node demo-node-a demo-node-stack"
+              v-for="(file, i) in inputFiles"
+              :key="file.label"
+              :style="{ '--i': i }"
+            >
+              <div class="demo-icon demo-icon-file">
+                <img v-if="file.img" :src="file.img" alt="" class="demo-icon-img-inline" />
+                <span v-else>{{ file.label }}</span>
+              </div>
             </div>
-            <div class="demo-node-label">imported.docx</div>
+            <div class="demo-cluster-label"><h3><b>docx · ppt · xlsx · jpg / jpeg / png / gif</b></h3></div>
           </div>
 
           <!-- Convert arrow + pulse -->
@@ -127,30 +136,217 @@
       </div>
     </section>
 
-    <!-- ── How it works ── -->
+    <!-- ── Product Tour: real screens, sample data ── -->
+    <section class="tour" id="tour">
+      <div class="section-inner">
+        <div class="section-label">
+          <span class="label-line"></span>
+          Take a look inside
+          <span class="label-line"></span>
+        </div>
+        <p class="tour-sub">
+          Three real DarkDune screens, filled in with sample data, showing
+          how files get wired, stored, and worked on.
+        </p>
+      </div>
+
+      <div class="tour-wrap">
+        <div class="tour-tabs">
+          <button
+            v-for="(tab, i) in tourTabs"
+            :key="tab.id"
+            type="button"
+            class="tour-tab"
+            :class="{ 'is-active': activeTour === i }"
+            @click="activeTour = i"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <div class="tour-window">
+          <div class="tour-chrome">
+            <span class="chrome-dot chrome-dot-r"></span>
+            <span class="chrome-dot chrome-dot-y"></span>
+            <span class="chrome-dot chrome-dot-g"></span>
+            <span class="chrome-url">darkdune.app/{{ tourTabs[activeTour].path }}</span>
+          </div>
+
+          <!-- ── File & Document Connector ── -->
+          <div class="tour-screen tour-screen-file" v-show="activeTour === 0">
+            <div class="tour-screen-head">
+              <div>
+                <h4 class="tour-screen-title">File &amp; Document Connector</h4>
+                <p class="tour-screen-hint">Drag from output to input to wire files together</p>
+              </div>
+              <div class="tour-screen-actions">
+                <span class="tour-btn tour-btn-primary">+ New File</span>
+                <span class="tour-btn">Add File</span>
+                <span class="tour-btn">Clear Links</span>
+              </div>
+            </div>
+
+            <div class="tour-canvas">
+              <svg viewBox="0 0 100 60" class="tour-canvas-svg" preserveAspectRatio="none">
+                <path d="M 20 14 C 32 20, 30 34, 42 38" class="tour-link-path" />
+                <path d="M 55 38 C 64 30, 62 18, 74 14" class="tour-link-path" />
+                <path d="M 82 20 C 88 30, 84 42, 76 48" class="tour-link-path" />
+              </svg>
+
+              <div class="tour-file-node" style="left: 6%; top: 12%;">
+                <span class="tour-file-icon tour-file-icon--docx">DOCX</span>
+                <span class="tour-file-name">Campaign_Brief.docx</span>
+              </div>
+              <div class="tour-file-node" style="left: 34%; top: 56%;">
+                <span class="tour-file-icon tour-file-icon--jpg">JPG</span>
+                <span class="tour-file-name">Product_Shots.jpg</span>
+              </div>
+              <div class="tour-file-node" style="left: 62%; top: 10%;">
+                <span class="tour-file-icon tour-file-icon--xlsx">XLS</span>
+                <span class="tour-file-name">Budget_Overview.xlsx</span>
+              </div>
+              <div class="tour-file-node" style="left: 70%; top: 62%;">
+                <span class="tour-file-icon tour-file-icon--ppt">PPT</span>
+                <span class="tour-file-name">Launch_Deck.pptx</span>
+              </div>
+            </div>
+
+            <div class="tour-screen-foot">
+              <span class="tour-conn-count">⟡ 3 connections</span>
+              <span class="tour-conn-pill">1 → 2</span>
+              <span class="tour-conn-pill">2 → 3</span>
+              <span class="tour-conn-pill">3 → 4</span>
+            </div>
+          </div>
+
+          <!-- ── Your Documents (Dashboard) ── -->
+          <div class="tour-screen tour-screen-dash" v-show="activeTour === 1">
+            <div class="tour-screen-head">
+              <div>
+                <h4 class="tour-screen-title">Your Documents</h4>
+                <p class="tour-screen-hint">Every file opened in DarkDune, saved in native .dd format</p>
+              </div>
+              <div class="tour-screen-actions">
+                <span class="tour-btn tour-btn-primary">+ New File</span>
+                <span class="tour-btn">Add / Link Files</span>
+              </div>
+            </div>
+
+            <div class="tour-doc-grid">
+              <div class="tour-doc-card" v-for="doc in sampleDocs" :key="doc.name">
+                <span class="tour-doc-icon"></span>
+                <div class="tour-doc-meta">
+                  <span class="tour-doc-name">{{ doc.name }}</span>
+                  <span class="tour-doc-sub">.dd Document · {{ doc.date }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── AI Assistant ── -->
+          <div class="tour-screen tour-screen-ai" v-show="activeTour === 2">
+            <div class="tour-ai-layout">
+              <div class="tour-ai-sidebar">
+                <span class="tour-btn tour-btn-primary tour-btn-block">+ New conversation</span>
+                <span class="tour-ai-convo">Link the Q3 report to proposal</span>
+              </div>
+
+              <div class="tour-ai-thread">
+                <div class="tour-msg tour-msg-user">Can you link the Q3 report to the client proposal?</div>
+                <div class="tour-msg tour-msg-bot">
+                  Sure — I'll connect <strong>Budget_Overview.xlsx</strong> to
+                  <strong>Client_Proposal_Draft.dd</strong> as a reference link.
+                </div>
+                <div class="tour-ai-action">
+                  <span>⇢ Link the two files</span>
+                  <span class="tour-btn tour-btn-primary tour-btn-sm">Confirm</span>
+                  <span class="tour-btn tour-btn-sm">Cancel</span>
+                </div>
+
+                <div class="tour-msg tour-msg-user">Also summarize the brand guidelines doc.</div>
+                <div class="tour-msg tour-msg-bot">
+                  Here's a quick summary of <strong>Brand_Guidelines_Summary.dd</strong> —
+                  covers tone, color palette, and logo usage rules.
+                  <div class="tour-doc-preview">
+                    <span class="tour-doc-preview-line" style="width: 80%;"></span>
+                    <span class="tour-doc-preview-line" style="width: 60%;"></span>
+                    <span class="tour-doc-preview-line" style="width: 70%;"></span>
+                    <span class="tour-doc-preview-line" style="width: 45%;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="how" id="how">
       <div class="section-inner">
         <div class="section-label">
           <span class="label-line"></span>
-          How it works
+          A few names from the archive
           <span class="label-line"></span>
         </div>
+        <p class="collab-sub">
+          Some of these companies don't exist anymore. DarkDune still would have worked.
+        </p>
+      </div>
 
-        <div class="steps">
-          <div class="step" v-for="(step, i) in steps" :key="i">
-            <div class="step-num">0{{ i + 1 }}</div>
-            <div class="step-connector" v-if="i < steps.length - 1">
-              <div class="connector-line"></div>
-              <div class="connector-nodes">
-                <span class="node" v-for="n in 3" :key="n"></span>
-              </div>
-            </div>
-            <div class="step-body">
-              <h4 class="step-title">{{ step.title }}</h4>
-              <p class="step-desc">{{ step.desc }}</p>
-            </div>
+      <div class="logo-strip" aria-label="Vantar, Norrix, Halcyon Labs, Ferro Systems, Quill and Co, Meridian OS, Driftline">
+        <div
+          class="logo-track"
+          :class="{ 'is-paused': stripPaused }"
+        >
+          <div
+            class="logo-chip"
+            v-for="(c, i) in [...archiveLogos, ...archiveLogos]"
+            :key="'lg-' + i"
+            :aria-hidden="i >= archiveLogos.length"
+          >
+            <span class="logo-mark" :class="'logo-mark--' + c.id" v-if="c.hasIcon">
+              <svg v-if="c.id === 'norrix'" viewBox="0 0 24 24" class="logo-svg">
+                <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" />
+              </svg>
+              <svg v-else-if="c.id === 'halcyon'" viewBox="0 0 24 24" class="logo-svg">
+                <circle cx="12" cy="12" r="8" fill="none" stroke-width="2" />
+              </svg>
+              <svg v-else-if="c.id === 'quill'" viewBox="0 0 24 24" class="logo-svg">
+                <path d="M4 20 C4 20 13 18 17 8 C18.5 4.5 20 4 20 4 C20 4 17.5 6.5 14.5 7.5 C7.5 9.5 4 20 4 20 Z" />
+              </svg>
+              <svg v-else-if="c.id === 'meridian'" viewBox="0 0 24 24" class="logo-svg">
+                <circle cx="12" cy="12" r="9" fill="none" stroke-width="1.6" />
+                <ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke-width="1.6" />
+                <line x1="3" y1="12" x2="21" y2="12" stroke-width="1.6" />
+              </svg>
+              <svg v-else-if="c.id === 'driftline'" viewBox="0 0 24 24" class="logo-svg">
+                <path d="M2 14 Q7 6 12 14 T22 14" fill="none" stroke-width="2" />
+              </svg>
+            </span>
+
+            <span class="logo-wordmark" :class="'logo-wordmark--' + c.id">
+              <template v-if="c.stacked">
+                <span class="wm-line">{{ c.stacked[0] }}</span>
+                <span class="wm-line">{{ c.stacked[1] }}</span>
+              </template>
+              <template v-else>{{ c.name }}</template>
+            </span>
           </div>
         </div>
+
+        <button
+          type="button"
+          class="strip-toggle"
+          @click="stripPaused = !stripPaused"
+          :aria-label="stripPaused ? 'Play logo animation' : 'Pause logo animation'"
+        >
+          <svg v-if="!stripPaused" viewBox="0 0 24 24" class="toggle-icon">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" class="toggle-icon">
+            <polygon points="7,4 20,12 7,20" />
+          </svg>
+        </button>
       </div>
     </section>
 
@@ -165,6 +361,12 @@ export default {
 
   data() {
     return {
+      inputFiles: [
+        { label: 'DOCX', img: '/Images/Microsoft word icon.png' },
+        { label: 'PPT', img: '/Images/Power point presentation icon.jpg' },
+        { label: 'XLSX', img: '/Images/Excel spread sheet.png' },
+        { label: 'IMG', img: '/Images/Normal.png' },
+      ],
       features: [
         {
           icon: '⬡',
@@ -187,23 +389,29 @@ export default {
           desc: 'Mark up images directly with strokes and notes, without altering the source file underneath.',
         },
       ],
-      steps: [
-        {
-          title: 'Upload your files',
-          desc: 'Drop in files from any source — documents, code, media, data.',
-        },
-        {
-          title: 'Open & edit natively',
-          desc: 'DarkDune converts what you open into an editable native document automatically.',
-        },
-        {
-          title: 'Define the links',
-          desc: 'Draw connections between files to define relationships and flow.',
-        },
-        {
-          title: 'Compile & export',
-          desc: 'Generate your final output — one click, any format.',
-        },
+      activeTour: 0,
+      tourTabs: [
+        { id: 'file', label: 'File', path: 'startbuilding' },
+        { id: 'dashboard', label: 'Dashboard', path: 'dashboard' },
+        { id: 'ai', label: 'AI Assistant', path: 'assistant' },
+      ],
+      sampleDocs: [
+        { name: 'Q3_Marketing_Plan', date: '19 Jul 2026' },
+        { name: 'Client_Proposal_Draft', date: '19 Jul 2026' },
+        { name: 'Team_Retro_Notes', date: '18 Jul 2026' },
+        { name: 'Brand_Guidelines_Summary', date: '18 Jul 2026' },
+        { name: 'Product_Roadmap_2026', date: '17 Jul 2026' },
+      ],
+      // Entirely invented brand marks — no real company, past or present,
+      // is represented here. Styled as a "retired tech" archive strip.
+      archiveLogos: [
+        { id: 'vantar',     name: 'VANTAR',        hasIcon: false },
+        { id: 'norrix',     name: 'NORRIX',        hasIcon: true },
+        { id: 'halcyon',    name: 'Halcyon Labs',  hasIcon: true },
+        { id: 'ferro',      name: 'FERRO SYSTEMS', hasIcon: false },
+        { id: 'quill',      name: 'Quill & Co.',   hasIcon: true },
+        { id: 'meridian',   name: 'Meridian OS',   hasIcon: true, stacked: ['Meridian', 'OS'] },
+        { id: 'driftline',  name: 'driftline',     hasIcon: true },
       ],
     }
   },

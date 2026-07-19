@@ -33,7 +33,7 @@
             <span class="footer__logo-hex">⬡</span>
             <div class="footer__logo-text">
               <span class="footer__logo-main">DARKDUNE</span>
-              <span class="footer__logo-sub">Project X</span>
+              <span class="footer__logo-sub">DarkDune</span>
             </div>
           </div>
           <p class="footer__description">
