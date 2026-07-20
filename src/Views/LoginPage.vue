@@ -125,7 +125,7 @@
             </form>
           </div>
           <div class="form-terms">
-            By logging in, you agree to our <a href="#" class="link-secondary">Terms of Service</a> and <a href="#" class="link-secondary">Privacy Policy</a>.
+            By logging in, you agree to our <router-link to="/terms-of-service" class="link-secondary">Terms of Service</router-link> and <router-link to="/privacy-policy" class="link-secondary">Privacy Policy</router-link>.
           </div>
         </div>
 

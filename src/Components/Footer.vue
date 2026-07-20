@@ -107,8 +107,8 @@
         <div class="footer__column">
           <h3 class="footer__heading">Legal</h3>
           <nav class="footer__nav">
-            <a href="#" class="footer__link">Privacy Policy</a>
-            <a href="#" class="footer__link">Terms of Service</a>
+            <router-link to="/privacy-policy" class="footer__link">Privacy Policy</router-link>
+            <router-link to="/terms-of-service" class="footer__link">Terms of Service</router-link>
             <a href="#" class="footer__link">Cookie Policy</a>
             <a href="#" class="footer__link">GDPR</a>
             <a href="#" class="footer__link">Compliance</a>
@@ -127,9 +127,9 @@
           © <span id="year"></span> DarkDune. All rights reserved. | Made with <span class="footer__heart">♥</span> for builders.
         </p>
         <div class="footer__bottom-links">
-          <a href="#" class="footer__bottom-link">Privacy</a>
+          <router-link to="/privacy-policy" class="footer__bottom-link">Privacy</router-link>
           <span class="footer__divider-dot">•</span>
-          <a href="#" class="footer__bottom-link">Terms</a>
+          <router-link to="/terms-of-service" class="footer__bottom-link">Terms</router-link>
           <span class="footer__divider-dot">•</span>
           <a href="#" class="footer__bottom-link">Cookies</a>
         </div>

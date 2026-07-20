@@ -8,6 +8,8 @@ import WordEditor from '../Views/WordEditor.vue'
 import ForgotPassword from '../Views/ForgotPassword.vue'
 import Dashboard from '../Views/Dashboard.vue'
 import AIAssistant from '../Views/Aiassistant.vue'
+import TermsOfService from '../Views/TermsOfService.vue'
+import PrivacyPolicy from '../Views/PrivacyPolicy.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,8 +58,24 @@ const router = createRouter({
       path: '/editor/:id?',
       name: 'WordEditor',
       component: WordEditor
+    },
+    {
+      path: '/terms-of-service',
+      name: 'TermsOfService',
+      component: TermsOfService
+    },
+    {
+      path: '/privacy-policy',
+      name: 'PrivacyPolicy',
+      component: PrivacyPolicy
     }
-  ]
+  ],
+  scrollBehavior(to) {
+    if (to.hash) {
+      return { el: to.hash, behavior: 'smooth', top: 96 }
+    }
+    return { top: 0 }
+  }
 })
 
 export default router

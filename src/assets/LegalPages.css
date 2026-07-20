@@ -1,0 +1,467 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Syne:wght@400;500;700&display=swap');
+
+/* ════════════════════════════
+   CSS VARIABLES
+════════════════════════════ */
+:root {
+  --bg:              #090909;
+  --surface:         #0f0f0f;
+  --card:            #141414;
+  --raised:          #1a1a1a;
+  --border:          #242424;
+  --volcanic:        #c0392b;
+  --volcanic-glow:   #e74c3c;
+  --volcanic-dim:    #5a1a12;
+  --gold:            #d4a84b;
+  --text-primary:    #ede8df;
+  --text-secondary:  #6e6a64;
+  --text-muted:      #353330;
+  --success:         #27ae60;
+  --error:           #e74c3c;
+  --warning:         #f39c12;
+  --font-display:    'Cormorant Garamond', serif;
+  --font-body:       'Syne', sans-serif;
+}
+
+/* ════════════════════════════
+   PAGE WRAPPER
+════════════════════════════ */
+.legal-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+.legal-hex-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 480px;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* ════════════════════════════
+   HERO / DOCUMENT HEADER
+════════════════════════════ */
+.legal-hero {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 3rem 3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.legal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--volcanic-glow);
+  margin-bottom: 1.25rem;
+}
+
+.legal-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--volcanic-glow);
+  box-shadow: 0 0 8px var(--volcanic-glow);
+}
+
+.legal-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.legal-title .accent {
+  color: var(--volcanic-glow);
+}
+
+.legal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.legal-meta-item {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.legal-meta-item strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.legal-intro {
+  max-width: 760px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.legal-switch {
+  margin-top: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 8px;
+  background: rgba(192, 57, 43, 0.06);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.legal-switch:hover {
+  border-color: var(--volcanic-glow);
+  color: var(--volcanic-glow);
+  background: rgba(192, 57, 43, 0.12);
+}
+
+.legal-switch svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ════════════════════════════
+   BODY LAYOUT (TOC + CONTENT)
+════════════════════════════ */
+.legal-body {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3.5rem 3rem 6rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+/* ── Table of Contents ── */
+.legal-toc {
+  position: sticky;
+  top: 96px;
+}
+
+.legal-toc-heading {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.legal-toc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-left: 1px solid var(--border);
+  padding: 0;
+  margin: 0;
+}
+
+.legal-toc-list a {
+  display: block;
+  padding: 0.35rem 0 0.35rem 1rem;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.legal-toc-list a:hover {
+  color: var(--volcanic-glow);
+  border-left-color: var(--volcanic-glow);
+}
+
+.legal-toc-list .num {
+  color: var(--text-muted);
+  margin-right: 0.4rem;
+  font-family: var(--font-display);
+}
+
+/* ── Content ── */
+.legal-content {
+  min-width: 0;
+}
+
+.legal-section {
+  padding-bottom: 2.75rem;
+  margin-bottom: 2.75rem;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 96px;
+}
+
+.legal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.legal-section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.legal-section-heading .idx {
+  font-size: 1rem;
+  color: var(--volcanic-glow);
+  font-weight: 600;
+}
+
+.legal-section p {
+  font-size: 14.5px;
+  line-height: 1.85;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.legal-section p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-section strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.legal-section a.inline-link {
+  color: var(--volcanic-glow);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-section a.inline-link:hover {
+  color: var(--gold);
+}
+
+.legal-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0;
+}
+
+.legal-list li {
+  position: relative;
+  padding-left: 1.4rem;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+
+.legal-list li::before {
+  content: '⬡';
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  color: var(--volcanic-glow);
+  font-size: 11px;
+}
+
+.legal-list li strong {
+  color: var(--text-primary);
+}
+
+/* Callout / highlight box */
+.legal-callout {
+  display: flex;
+  gap: 0.9rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid rgba(212, 168, 75, 0.25);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(212, 168, 75, 0.05);
+  margin: 1.25rem 0;
+}
+
+.legal-callout svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--gold);
+  margin-top: 0.15rem;
+}
+
+.legal-callout p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.legal-callout--danger {
+  border-color: rgba(192, 57, 43, 0.3);
+  border-left-color: var(--volcanic-glow);
+  background: rgba(192, 57, 43, 0.06);
+}
+
+.legal-callout--danger svg {
+  color: var(--volcanic-glow);
+}
+
+/* Simple table (used for data categories, sub-processors, etc.) */
+.legal-table-wrap {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.legal-table th {
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--gold);
+  background: rgba(212, 168, 75, 0.06);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.legal-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.legal-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Contact card at the end of the document */
+.legal-contact {
+  margin-top: 3rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.legal-contact-text h4 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+}
+
+.legal-contact-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.legal-contact-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--volcanic), var(--volcanic-glow));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.legal-contact-email:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(192, 57, 43, 0.35);
+}
+
+/* ════════════════════════════
+   RESPONSIVE
+════════════════════════════ */
+@media (max-width: 960px) {
+  .legal-body {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .legal-toc {
+    position: relative;
+    top: 0;
+    order: -1;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .legal-toc-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-left: none;
+    gap: 0.5rem;
+  }
+
+  .legal-toc-list a {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.4rem 0.9rem;
+    margin-left: 0;
+  }
+
+  .legal-toc-list a:hover {
+    border-color: var(--volcanic-glow);
+  }
+}
+
+@media (max-width: 640px) {
+  .legal-hero {
+    padding: 5rem 1.5rem 2.5rem;
+  }
+
+  .legal-body {
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .legal-contact {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -122,7 +122,7 @@
               <div class="form-options">
                 <label class="checkbox-label">
                   <input type="checkbox" v-model="formData.acceptTerms" class="checkbox-input" />
-                  <span>I agree to the <a href="#" class="link-secondary">Terms of Service</a> and <a href="#" class="link-secondary">Privacy Policy</a></span>
+                  <span>I agree to the <router-link to="/terms-of-service" class="link-secondary">Terms of Service</router-link> and <router-link to="/privacy-policy" class="link-secondary">Privacy Policy</router-link></span>
                 </label>
               </div>
               <span v-if="errors.acceptTerms" class="form-error">{{ errors.acceptTerms }}</span>
@@ -144,7 +144,7 @@
             </form>
           </div>
           <div class="form-terms">
-            By signing up, you agree to our <a href="#" class="link-secondary">Terms of Service</a> and <a href="#" class="link-secondary">Privacy Policy</a>.
+            By signing up, you agree to our <router-link to="/terms-of-service" class="link-secondary">Terms of Service</router-link> and <router-link to="/privacy-policy" class="link-secondary">Privacy Policy</router-link>.
           </div>
         </div>
 

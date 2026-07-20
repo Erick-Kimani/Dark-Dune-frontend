@@ -54,6 +54,30 @@
 
         <div class="we-divider"></div>
 
+        <!-- Line spacing -->
+        <div class="we-tool-group">
+          <select class="we-select we-line-spacing" title="Line spacing" v-model="currentLineSpacing" @change="setLineSpacing($event.target.value)">
+            <option v-for="ls in lineSpacings" :key="ls.value" :value="ls.value">{{ ls.label }}</option>
+          </select>
+        </div>
+
+        <div class="we-divider"></div>
+
+        <!-- Page setup -->
+        <div class="we-tool-group">
+          <select class="we-select we-page-size" title="Paper size" v-model="pageSize">
+            <option value="A4">A4</option>
+            <option value="Letter">Letter</option>
+          </select>
+          <select class="we-select we-page-margin" title="Margins" v-model="marginPreset">
+            <option value="normal">Normal margins</option>
+            <option value="narrow">Narrow margins</option>
+            <option value="wide">Wide margins</option>
+          </select>
+        </div>
+
+        <div class="we-divider"></div>
+
         <!-- Format -->
         <div class="we-tool-group">
           <button class="we-btn" :class="{ active: fmt.bold }"          @mousedown.prevent="execCmd('bold')"           title="Bold (Ctrl+B)">
@@ -146,6 +170,9 @@
           <button class="we-btn" @click="toggleFindReplace" title="Find & Replace (Ctrl+H)">
             <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11H14M11 8V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           </button>
+          <button class="we-btn" @click="insertPageBreak" title="Insert page break (Ctrl+Enter)">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="14" width="16" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M4 12H8M11 12H13M16 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
         </div>
 
         <div class="we-divider"></div>
@@ -232,8 +259,8 @@
         </div>
       </transition>
 
-      <!-- A4 Document page -->
-      <div class="we-page">
+      <!-- Document page — size/margins driven by page setup, scaled by zoom -->
+      <div class="we-page" :style="pageStyle">
         <div
           ref="editor"
           class="we-content"
@@ -261,7 +288,9 @@
       <span class="we-status-sep">·</span>
       <span class="we-status-item we-status-zoom">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.3"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-        100%
+        <button class="we-zoom-btn" @click="zoomOut" title="Zoom out">−</button>
+        <span class="we-zoom-value">{{ zoomLevel }}%</span>
+        <button class="we-zoom-btn" @click="zoomIn" title="Zoom in">+</button>
       </span>
     </div>
 
@@ -321,6 +350,28 @@ export default {
       wordCount: 0,
       charCount: 0,
 
+      lineSpacings: [
+        { label: 'Single',   value: '1'    },
+        { label: '1.15',     value: '1.15' },
+        { label: '1.5',      value: '1.5'  },
+        { label: 'Double',   value: '2'    },
+      ],
+      currentLineSpacing: '1.8',
+
+      pageSize:     'A4',
+      pageSizes: {
+        A4:     { w: '210mm', h: '297mm' },
+        Letter: { w: '216mm', h: '279mm' },
+      },
+      marginPreset: 'normal',
+      margins: {
+        normal: '25mm 20mm',
+        narrow: '12mm',
+        wide:   '38mm 50mm',
+      },
+
+      zoomLevel: 100,
+
       showTableDialog: false,
       hoverRow:        0,
       hoverCol:        0,
@@ -356,6 +407,18 @@ export default {
       if (this.saveStatus === 'saved')  return 'status-saved'
       if (this.saveStatus === 'saving') return 'status-saving'
       return 'status-unsaved'
+    },
+
+    pageStyle() {
+      const size   = this.pageSizes[this.pageSize]
+      const margin = this.margins[this.marginPreset]
+      return {
+        width:      size.w,
+        minHeight:  size.h,
+        padding:    margin,
+        transform:  `scale(${this.zoomLevel / 100})`,
+        transformOrigin: 'top center',
+      }
     },
   },
 
@@ -469,10 +532,57 @@ export default {
       }
     },
 
+    // Real word platforms keep formatting on paste (tables, bold, lists —
+    // whether from Word, Google Docs, or a web page). Falls back to plain
+    // text only when the clipboard genuinely has no HTML to offer.
     onPaste(e) {
       e.preventDefault()
-      const text = e.clipboardData.getData('text/plain')
-      document.execCommand('insertText', false, text)
+      const html = e.clipboardData.getData('text/html')
+      if (html) {
+        document.execCommand('insertHTML', false, this.sanitizePastedHtml(html))
+      } else {
+        const text = e.clipboardData.getData('text/plain')
+        document.execCommand('insertText', false, text)
+      }
+      this.onInput()
+    },
+
+    // Strips pasted markup down to a safe, known subset so external
+    // formatting comes in looking reasonable without dragging along
+    // scripts, event handlers, iframes, or layout-breaking inline styles.
+    sanitizePastedHtml(html) {
+      const allowedTags = [
+        'P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE',
+        'UL', 'OL', 'LI', 'H1', 'H2', 'H3',
+        'TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH',
+        'IMG', 'A', 'SPAN', 'DIV',
+      ]
+      const template = document.createElement('template')
+      template.innerHTML = html
+
+      const clean = (node) => {
+        [...node.childNodes].forEach((child) => {
+          if (child.nodeType !== 1) return
+          if (!allowedTags.includes(child.tagName)) {
+            // Unwrap disallowed elements (e.g. <script>, <style>, <font
+            // face="Wingdings">'s parent divs from some editors) but keep
+            // their text/child content rather than losing it outright.
+            while (child.firstChild) child.parentNode.insertBefore(child.firstChild, child)
+            child.remove()
+            return
+          }
+          ;[...child.attributes].forEach((attr) => {
+            const name = attr.name.toLowerCase()
+            const risky = name.startsWith('on') ||
+              (name === 'style' && /position\s*:|behavior\s*:|expression\s*\(/i.test(attr.value))
+            if (risky) child.removeAttribute(attr.name)
+          })
+          if (child.tagName === 'TABLE') child.classList.add('we-doc-table')
+          clean(child)
+        })
+      }
+      clean(template.content)
+      return template.innerHTML
     },
 
     // ── Word count ──
@@ -554,17 +664,22 @@ export default {
       this.hoverCol        = 0
     },
 
+    // Header row is a real <thead><th> — not just a styled <td> — so it
+    // can carry its own look and (via CSS `display: table-header-group`)
+    // repeat itself across page breaks on print/export, the way Word
+    // tables do when "Repeat Header Rows" is on.
     confirmInsertTable() {
       const rows = this.hoverRow
       const cols = this.hoverCol
       this.showTableDialog = false
+      if (rows < 1 || cols < 1) return
 
-      let html = '<table class="we-doc-table"><tbody>'
-      for (let r = 0; r < rows; r++) {
+      let html = '<table class="we-doc-table"><thead><tr>'
+      for (let c = 0; c < cols; c++) html += '<th><br></th>'
+      html += '</tr></thead><tbody>'
+      for (let r = 1; r < rows; r++) {
         html += '<tr>'
-        for (let c = 0; c < cols; c++) {
-          html += '<td><br></td>'
-        }
+        for (let c = 0; c < cols; c++) html += '<td><br></td>'
         html += '</tr>'
       }
       html += '</tbody></table><p><br></p>'
@@ -573,6 +688,61 @@ export default {
       document.execCommand('insertHTML', false, html)
       this.onInput()
     },
+
+    // ── Page break ──
+    // A visible marker while editing (dashed divider, hidden on print),
+    // and a real `page-break-after` for print/export — the practical way
+    // to get true multi-page output without rewriting the editor as a
+    // full reflow-pagination engine.
+    insertPageBreak() {
+      this.$refs.editor?.focus()
+      document.execCommand(
+        'insertHTML', false,
+        '<div class="we-page-break" contenteditable="false"><span>Page Break</span></div><p><br></p>'
+      )
+      this.onInput()
+    },
+
+    // ── Line spacing ──
+    // execCommand has no built-in line-height command, so this applies
+    // line-height directly to whichever block-level elements the current
+    // selection touches (or just the current block, if collapsed).
+    setLineSpacing(value) {
+      this.$refs.editor?.focus()
+      const sel = window.getSelection()
+      if (!sel || !sel.rangeCount) return
+      const root  = this.$refs.editor
+      const range = sel.getRangeAt(0)
+      const blockTags = ['P', 'H1', 'H2', 'H3', 'LI']
+      const blocks = new Set()
+
+      const climbToBlock = (node) => {
+        if (node.nodeType === 3) node = node.parentElement
+        while (node && node !== root) {
+          if (blockTags.includes(node.tagName)) return node
+          node = node.parentElement
+        }
+        return null
+      }
+
+      if (range.collapsed) {
+        const block = climbToBlock(range.startContainer)
+        if (block) blocks.add(block)
+      } else {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
+        let n
+        while ((n = walker.nextNode())) {
+          if (blockTags.includes(n.tagName) && range.intersectsNode(n)) blocks.add(n)
+        }
+      }
+
+      blocks.forEach((b) => { b.style.lineHeight = value })
+      this.onInput()
+    },
+
+    // ── Zoom ──
+    zoomIn()  { this.zoomLevel = Math.min(200, this.zoomLevel + 10) },
+    zoomOut() { this.zoomLevel = Math.max(50,  this.zoomLevel - 10) },
 
     // ── Image ──
     insertImage(e) {
@@ -741,6 +911,7 @@ export default {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 's') { e.preventDefault(); this.saveDocument() }
         if (e.key === 'h') { e.preventDefault(); this.toggleFindReplace() }
+        if (e.key === 'Enter') { e.preventDefault(); this.insertPageBreak() }
       }
     },
   },
@@ -886,8 +1057,11 @@ export default {
   font-size: 12px; padding: 3px 4px; outline: none;
   cursor: pointer; height: 28px;
 }
-.we-font-family { width: 130px; }
-.we-font-size   { width: 50px; }
+.we-font-family  { width: 130px; }
+.we-font-size    { width: 50px; }
+.we-line-spacing { width: 84px; }
+.we-page-size    { width: 68px; }
+.we-page-margin  { width: 118px; }
 .we-select:focus { border-color: #c0392b; }
 
 /* ── Find & Replace ── */
@@ -1040,18 +1214,41 @@ export default {
 .we-content ul, .we-content ol { padding-left: 2em; margin: 0.4em 0; }
 .we-content li { margin-bottom: 0.2em; }
 
-/* Tables inside document */
+/* Tables inside document — banded body rows, a real <thead> that repeats
+   across page breaks on print/export, and rows that never split mid-row. */
 .we-content :deep(.we-doc-table) {
   border-collapse: collapse; width: 100%; margin: 1em 0;
 }
+.we-content :deep(.we-doc-table thead) { display: table-header-group; }
+.we-content :deep(.we-doc-table tr) { break-inside: avoid; page-break-inside: avoid; }
 .we-content :deep(.we-doc-table td),
 .we-content :deep(.we-doc-table th) {
   border: 1px solid #ccc; padding: 6px 10px;
   min-width: 60px; vertical-align: top;
 }
-.we-content :deep(.we-doc-table tr:first-child td) {
-  background: #f5f5f5; font-weight: 600;
+.we-content :deep(.we-doc-table th) {
+  background: #2c5f8a; color: #fff; font-weight: 600;
+  text-align: left; border-color: #1e4666;
 }
+.we-content :deep(.we-doc-table tbody tr:nth-child(even) td) { background: #f4f7fa; }
+
+/* Manual page break marker — visible while editing, invisible on print,
+   with a real page-break-after so print/export actually starts a new page. */
+.we-content :deep(.we-page-break) {
+  position: relative; height: 1px; margin: 2em 0;
+  border-top: 1px dashed #999;
+  break-after: page; page-break-after: always;
+}
+.we-content :deep(.we-page-break span) {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+  background: #fff; padding: 0 10px; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #999;
+}
+@media print {
+  .we-content :deep(.we-page-break) { border-top: none; }
+  .we-content :deep(.we-page-break span) { display: none; }
+}
+
 .we-content :deep(.we-doc-img) {
   max-width: 100%; height: auto; display: block; margin: 0.5em 0;
 }
@@ -1067,6 +1264,14 @@ export default {
 .we-status-item svg { width: 12px; height: 12px; }
 .we-status-sep  { color: #333; }
 .we-status-zoom { margin-left: auto; }
+.we-zoom-btn {
+  background: none; border: 1px solid #333; border-radius: 3px;
+  color: #999; width: 16px; height: 16px; line-height: 1;
+  font-size: 11px; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.we-zoom-btn:hover { border-color: #c0392b; color: #e74c3c; }
+.we-zoom-value { min-width: 34px; text-align: center; }
 
 /* Spinner */
 .spin { animation: spin 0.9s linear infinite; }
