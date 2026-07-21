@@ -687,11 +687,6 @@ a { text-decoration: none; color: inherit; }
   transform: translateX(4px);
 }
 
-.loading-spinner {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

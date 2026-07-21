@@ -1,9 +1,21 @@
+import { ref } from 'vue'
+
 const BASE_URL = 'http://localhost:8000/api'
 
+// Reactive flag so any component using it (e.g. Navbar) updates
+// immediately on login/logout, instead of only after a page reload.
+export const isLoggedInState = ref(!!localStorage.getItem('dd_token'))
+
 // Store token in localStorage
-const setToken = (token) => localStorage.setItem('dd_token', token)
+const setToken = (token) => {
+  localStorage.setItem('dd_token', token)
+  isLoggedInState.value = true
+}
 const getToken = () => localStorage.getItem('dd_token')
-const removeToken = () => localStorage.removeItem('dd_token')
+const removeToken = () => {
+  localStorage.removeItem('dd_token')
+  isLoggedInState.value = false
+}
 
 // Shared fetch helper
 const request = async (endpoint, method = 'GET', body = null) => {
@@ -77,7 +89,7 @@ export const authService = {
   },
 
   isLoggedIn() {
-    return !!getToken()
+    return isLoggedInState.value
   },
 
   getToken,
