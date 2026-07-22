@@ -72,20 +72,40 @@
 
     <!-- ── Search Bar (slide-down) ── -->
     <transition name="search-slide">
-      <div v-if="searchOpen" class="navbar__search-bar" role="search">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="search-icon" aria-hidden="true">
-          <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="10.5" y1="10.5" x2="15" y2="15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <input
-          ref="searchInput"
-          type="search"
-          placeholder="Search DarkDune…"
-          class="navbar__search-input"
-          aria-label="Search"
-          @keydown.esc="toggleSearch"
-        />
-        <button class="navbar__search-close" @click="toggleSearch" aria-label="Close search">✕</button>
+      <div v-if="searchOpen" class="navbar__search-panel">
+        <div class="navbar__search-bar" role="search">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="search-icon" aria-hidden="true">
+            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4"/>
+            <line x1="10.5" y1="10.5" x2="15" y2="15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <input
+            ref="searchInput"
+            type="search"
+            placeholder="Search DarkDune…"
+            class="navbar__search-input"
+            aria-label="Search"
+            v-model="searchQuery"
+            @keydown.esc="toggleSearch"
+            @keydown.enter.prevent="submitSearch"
+          />
+          <button class="navbar__search-close" @click="toggleSearch" aria-label="Close search">✕</button>
+        </div>
+
+        <div class="navbar__search-results" role="listbox" aria-label="Search results">
+          <template v-if="filteredRoutes.length">
+            <button
+              v-for="item in filteredRoutes"
+              :key="item.path"
+              type="button"
+              class="navbar__search-result"
+              @click="navigateTo(item)"
+            >
+              <span class="navbar__search-result-label">{{ item.label }}</span>
+              <span class="navbar__search-result-path">{{ item.path }}</span>
+            </button>
+          </template>
+          <p v-else class="navbar__search-no-results">No matching tabs found.</p>
+        </div>
       </div>
     </transition>
 
@@ -138,9 +158,37 @@ const navLinks = [
 const scrolled    = ref(false)
 const menuOpen    = ref(false)
 const searchOpen  = ref(false)
+const searchQuery = ref('')
 const activeLink  = ref(null)
 const searchInput = ref(null)
 const loggingOut  = ref(false)
+
+const routeItems = computed(() => {
+  const pages = [...navLinks.map(link => ({ label: link.label, path: link.href, name: undefined }))]
+  const existingPaths = new Set(pages.map(page => page.path))
+
+  router.getRoutes().forEach(route => {
+    if (!route.name) return
+    const label = getRouteLabel(route)
+    if (!label) return
+
+    const path = route.name === 'WordEditor' ? '/editor' : route.path.replace(/\/:.*\??$/, '')
+    if (existingPaths.has(path)) return
+
+    pages.push({ label, path, name: route.name })
+    existingPaths.add(path)
+  })
+
+  return pages
+})
+
+const filteredRoutes = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return routeItems.value
+  return routeItems.value.filter(item => {
+    return item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query)
+  })
+})
 
 // Reactive login state — re-checks localStorage on every render
 const isLoggedIn = computed(() => authService.isLoggedIn())
@@ -175,6 +223,46 @@ async function toggleSearch() {
     menuOpen.value = false
     await nextTick()
     searchInput.value?.focus()
+  } else {
+    searchQuery.value = ''
+  }
+}
+
+function getRouteLabel(route) {
+  switch (route.name) {
+    case 'Home': return 'HOME'
+    case 'StartBuilding': return 'File'
+    case 'Dashboard': return 'Dashboard'
+    case 'AIAssistant': return 'AI Assistant'
+    case 'Planning': return 'Planning'
+    case 'WordEditor': return 'Word Editor'
+    case 'Login': return 'Login'
+    case 'SignUp': return 'Sign Up'
+    case 'ForgotPassword': return 'Forgot Password'
+    case 'TermsOfService': return 'Terms of Service'
+    case 'PrivacyPolicy': return 'Privacy Policy'
+    default:
+      return String(route.name)
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+  }
+}
+
+function navigateTo(item) {
+  searchOpen.value = false
+  searchQuery.value = ''
+  menuOpen.value = false
+
+  if (item.name) {
+    router.push({ name: item.name })
+  } else {
+    router.push(item.path)
+  }
+}
+
+function submitSearch() {
+  if (filteredRoutes.value.length > 0) {
+    navigateTo(filteredRoutes.value[0])
   }
 }
 
@@ -463,17 +551,22 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   background: var(--volcanic-glow);
 }
 
-.navbar__search-bar {
+.navbar__search-panel {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.9rem 3rem;
+  flex-direction: column;
   border-top: 1px solid var(--border);
   background: rgba(9,9,9,0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   position: relative;
   z-index: 1;
+}
+
+.navbar__search-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 3rem;
 }
 
 .search-icon { color: var(--text-muted); flex-shrink: 0; }
@@ -488,6 +581,51 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   color: var(--text-primary);
   letter-spacing: 0.05em;
   caret-color: var(--volcanic-glow);
+}
+
+.navbar__search-results {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0 3rem 1rem;
+}
+
+.navbar__search-result {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text-primary);
+  text-align: left;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar__search-result:hover,
+.navbar__search-result:focus-visible {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(231,76,60,0.2);
+}
+
+.navbar__search-result-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.navbar__search-result-path {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.navbar__search-no-results {
+  padding: 1rem 0;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .navbar__search-input::placeholder { color: var(--text-muted); }
@@ -608,13 +746,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   cursor: not-allowed;
   transform: none;
 }
-
-.drawer-slide-enter-active,
-.drawer-slide-leave-active {
-  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
-}
-.drawer-slide-enter-from,
-.drawer-slide-leave-to { opacity: 0; transform: translateY(-16px); }
 
 @media (max-width: 900px) {
   .navbar__links { display: none; }
